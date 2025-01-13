@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Chat.init({
     partnerId:{
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'Partners',

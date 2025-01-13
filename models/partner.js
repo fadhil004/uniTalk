@@ -14,11 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Partner.init({
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
     nama_partner:{
       type: DataTypes.STRING,
       allowNull: false
@@ -29,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     api_key:{
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     },
     status: {
       type: DataTypes.BOOLEAN,
@@ -38,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    modelName: 'Partner',
+    modelName: 'Partner'
   });
   return Partner;
 };
