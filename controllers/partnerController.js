@@ -9,7 +9,7 @@ exports.registerPartner = async (req, res) => {
         let partner;
         let attempt = 0;
 
-        while (!partner && attempt < 5) { // Batasi maksimal 5 percobaan
+        while (!partner && attempt < 5) { 
             try {
                 const api_key = uuidv4();
                 partner = await Partner.create({
@@ -22,7 +22,7 @@ exports.registerPartner = async (req, res) => {
                     console.log('Duplicate api_key detected. Retrying...');
                     attempt++;
                 } else {
-                    throw error; // Lempar error lain
+                    throw error; 
                 }
             }
         }

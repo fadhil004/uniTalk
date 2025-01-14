@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Partner.hasMany(models.Chat, { foreignKey: 'partnerId' });
+      Partner.hasOne(models.User, {foreignKey: 'partnerId'})
     }
   }
   Partner.init({
