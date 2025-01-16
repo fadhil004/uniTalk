@@ -1,6 +1,5 @@
 const { Chat } = require('../models');
 
-// Kirim Pesan
 exports.sendMessage = async (req, res) => {
     try {
         const { partnerId, id_sender, id_receiver, pesan, attachment } = req.body;
@@ -22,7 +21,6 @@ exports.sendMessage = async (req, res) => {
     }
 };
 
-// Dapatkan Semua Pesan
 exports.getAllMessages = async (req, res) => {
     try {
         const chats = await Chat.findAll();
@@ -32,7 +30,6 @@ exports.getAllMessages = async (req, res) => {
     }
 };
 
-// Hapus Pesan
 exports.deleteMessage = async (req, res) => {
     try {
         const { id } = req.params;

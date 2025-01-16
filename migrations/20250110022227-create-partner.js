@@ -5,9 +5,9 @@ module.exports = {
     await queryInterface.createTable('Partners', {
       id: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4
       },
       nama_partner: {
         type: Sequelize.STRING
@@ -18,6 +18,7 @@ module.exports = {
       api_key: {
         type: Sequelize.STRING,
         unique: true,
+        allowNull: true
       },
       status: {
         type: Sequelize.BOOLEAN

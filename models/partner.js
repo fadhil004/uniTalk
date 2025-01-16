@@ -15,6 +15,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Partner.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
+    },
     nama_partner:{
       type: DataTypes.STRING,
       allowNull: false

@@ -1,38 +1,18 @@
 const { Partner } = require('../models');
-const { v4: uuidv4 } = require('uuid');
+const partner = require('../models/partner');
 
 // Registrasi Partner
 exports.registerPartner = async (req, res) => {
     try {
         const { nama_partner, logo_partner } = req.body;
 
-        let partner;
-        let attempt = 0;
+        let partner = await Partner.create({
+            nama_partner,
+            logo_partner,
+        });
 
-        while (!partner && attempt < 5) { 
-            try {
-                const api_key = uuidv4();
-                partner = await Partner.create({
-                    nama_partner,
-                    logo_partner,
-                    api_key,
-                });
-            } catch (error) {
-                if (error.name === 'SequelizeUniqueConstraintError') {
-                    console.log('Duplicate api_key detected. Retrying...');
-                    attempt++;
-                } else {
-                    throw error; 
-                }
-            }
-        }
-
-        if (!partner) {
-            return res.status(500).json({
-                message: 'Failed to generate unique API key after multiple attempts',
-            });
-        }
-
+        partner.api_key = partner.id;
+        await partner.save();
 
         res.status(201).json({
             message: 'Partner registered successfully',
