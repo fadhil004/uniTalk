@@ -25,6 +25,9 @@ module.exports = {
       id_receiver: {
         type: Sequelize.STRING
       },
+      id_reference: {
+        type: Sequelize.STRING
+      },
       pesan: {
         type: Sequelize.TEXT
       },

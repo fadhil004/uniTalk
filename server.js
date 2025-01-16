@@ -20,7 +20,7 @@ sequelize.authenticate()
     });
 
 // Routes
-app.use('/api/partners', require('./routes/partnerRoutes'));
+app.use('/', require('./routes/index'));
 app.use('/api/chats', require('./routes/chatRoutes'));
 
 // Start Server

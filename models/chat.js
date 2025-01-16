@@ -28,7 +28,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     id_receiver:{
       type: DataTypes.STRING,
-      allowNull: false 
+      allowNull: true 
+    },
+    id_reference:{
+      type: DataTypes.STRING,
+      allowNull: true 
     }, 
     pesan: {
       type: DataTypes.TEXT,
