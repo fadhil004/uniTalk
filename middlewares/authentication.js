@@ -5,9 +5,9 @@ const authentication = (req, res, next) => {
         let token = req.session.token;
 
         if (!token) {
-            throw { message: 'You should login first!', status: 401 };
+            return res.status(401).json({ message: 'You should login first!' });    
         }
-        console.log(token)
+        console.log("Token dari session:", token);
         let decode = jwt.verifyToken(token);
         req.decoded = decode;
         next();

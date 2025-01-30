@@ -18,10 +18,6 @@ class partnerController{
                 partner,
             });
         } catch (error) {
-            if (error.name === 'SequelizeUniqueConstraintError') {
-                console.log('Duplicate api_key detected. Retrying...');
-                return createPartner(data); // Coba ulang
-            }
             res.status(500).json({ message: 'Error registering partner', error: error.message });
         }
     };

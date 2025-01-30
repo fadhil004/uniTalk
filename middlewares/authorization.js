@@ -1,12 +1,12 @@
 const { Partner } = require('../models');
 
-const Partner = async (req, res, next) => {
+const authorizePartner = async (req, res, next) => {
     try {
-        if (req.user.role !== 'partner') {
+        if (req.decoded.role !== 'partner') {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        const partner = await Partner.findByPk(req.user.partnerId);
+        const partner = await Partner.findByPk(req.decoded.partnerId);
         if (!partner) {
             return res.status(404).json({ message: 'Partner not found' });
         }
@@ -18,4 +18,4 @@ const Partner = async (req, res, next) => {
     }
 };
 
-module.exports = { Partner };
+module.exports = { authorizePartner };

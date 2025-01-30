@@ -29,11 +29,12 @@ module.exports = (sequelize, DataTypes) => {
             },
             role: {
                 type: DataTypes.ENUM('admin', 'partner'),
-                allowNull: false,
+                allowNull: true,
+                defaultValue: 'partner'
             },
             partnerId:{
-              type: DataTypes.INTEGER,
-              allowNull: false,
+              type: DataTypes.UUID,
+              allowNull: true,
               references: {
                 model: 'Partners',
                 key: 'id',
@@ -45,12 +46,7 @@ module.exports = (sequelize, DataTypes) => {
             modelName: 'User',
             hooks: {
                 beforeCreate: async (user) => {
-                    User.password = hashPassword(User.password);
-
-                    const existingUser = await User.constructor.findOne({ where: { username: User.username } });
-                    if (existingUser) {
-                    throw new Error('Username already exists');
-                    }
+                    user.password = hashPassword(user.password);
                 },
             },
         }

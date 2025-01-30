@@ -1,8 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { connectDB } = require('./config/config');
 const { sequelize } = require('./models');
+const session = require('express-session');
 
 const app = express();
 
@@ -19,9 +19,18 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', err);
     });
 
+
+app.use(session({
+    secret: 'kunci-inggris', 
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
+
 // Routes
 app.use('/', require('./routes/index'));
 app.use('/api/chats', require('./routes/chatRoutes'));
+
 
 // Start Server
 const PORT = process.env.PORT || 5000;
