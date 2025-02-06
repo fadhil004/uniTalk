@@ -1,4 +1,4 @@
-const { Partner } = require('../models');
+const { Partner, User } = require('../models');
 
 const authorizePartner = async (req, res, next) => {
     try {
@@ -18,4 +18,22 @@ const authorizePartner = async (req, res, next) => {
     }
 };
 
-module.exports = { authorizePartner };
+const authorizeAdmin = async (req, res, next) => {
+    try {
+        if (req.decoded.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
+        const admin = await User.findByPk(req.decoded.id);
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        req.admin = admin;
+        next();
+    } catch (error) {
+        return res.status(500).json({ message: 'Authorization failed', error });
+    }
+};
+
+module.exports = { authorizePartner, authorizeAdmin };

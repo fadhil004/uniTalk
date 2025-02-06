@@ -41,7 +41,12 @@ module.exports = (sequelize, DataTypes) => {
     attachment:{
       type: DataTypes.STRING,
       allowNull: true
-    } 
+    },
+    edited: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    }
   }, {
     sequelize,
     modelName: 'Chat',

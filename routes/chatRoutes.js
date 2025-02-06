@@ -3,8 +3,11 @@ const router = express.Router();
 
 const chatController = require('../controllers/chatController');
 
-router.post('/send', chatController.sendMessage); 
-router.get('/', chatController.getAllMessages); 
-router.delete('/:id', chatController.deleteMessage);
+const { authentication } = require('../middlewares/authentication');
+const { authorizePartner } = require('../middlewares/authorization');
+
+router.post('/send', authentication, authorizePartner, chatController.sendMessage); 
+router.get('/', authentication, authorizePartner, chatController.getAllMessages); 
+router.delete('/:id', authentication, authorizePartner, chatController.deleteMessage);
 
 module.exports = router

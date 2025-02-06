@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { sequelize } = require('./models');
 const session = require('express-session');
+const setUser = require('./middlewares/setUser');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(session({
 }));
 
 // Routes
+app.use(setUser);
 app.use('/', require('./routes/index'));
 app.use('/api/chats', require('./routes/chatRoutes'));
 
