@@ -34,8 +34,10 @@ module.exports = {
       attachment: {
         type: Sequelize.STRING
       },
-      status: {
-        type: Sequelize.BOOLEAN
+      edited: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
       },
       createdAt: {
         allowNull: false,

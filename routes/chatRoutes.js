@@ -4,10 +4,11 @@ const router = express.Router();
 const chatController = require('../controllers/chatController');
 
 const { authentication } = require('../middlewares/authentication');
-const { authorizePartner } = require('../middlewares/authorization');
+const { authorizePartner, authorizeAdmin } = require('../middlewares/authorization');
 
 router.post('/send', authentication, authorizePartner, chatController.sendMessage); 
-router.get('/', authentication, authorizePartner, chatController.getAllMessages); 
+router.get('/', authentication, authorizeAdmin, chatController.getAllMessages); 
 router.delete('/:id', authentication, authorizePartner, chatController.deleteMessage);
+router.put('/:id', authentication, authorizePartner, chatController.editChat);
 
 module.exports = router

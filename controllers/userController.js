@@ -12,13 +12,11 @@ class userController{
                 return res.status(400).json({ message: 'Email already in use' });
             }
 
-            const userRole = role === 'admin' ? 'admin' : 'partner';
-
             const user = await User.create({
                 name,
                 email,
                 password,
-                role : userRole,
+                role : 'partner',
                 partnerId: null,
             });
     
@@ -54,12 +52,11 @@ class userController{
                 };
                 let token = generateToken(payload);
                 req.session.token = token;
-                if (user.role === 'admin'){
-                    //res
-                    res.status(201).json({ message: 'User login as admin successfully', user, token });
-                }
-                //res.redirect
-                res.status(201).json({ message: 'User login as partner successfully', user, token });
+                return res.status(200).json({
+                    message: `User login as ${user.role} successfully`,
+                    user,
+                    token
+                });                
             } else{
                 //res.redirect
                 res.status(500).json({ message: 'Failed to login user', error });

@@ -4,6 +4,12 @@ class partnerController{
     static async registerPartner(req, res){
         try {
             const { nama_partner, logo_partner } = req.body;
+            const { id: userId } = req.decoded;
+
+            let user = await User.findByPk(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
 
             let partner = await Partner.create({
                 nama_partner,
@@ -13,9 +19,13 @@ class partnerController{
             partner.api_key = partner.id;
             await partner.save();
 
+            user.partnerId = partner.id;
+            await user.save();
+
             res.status(201).json({
                 message: 'Partner registered successfully',
                 partner,
+                user
             });
         } catch (error) {
             res.status(500).json({ message: 'Error registering partner', error: error.message });
