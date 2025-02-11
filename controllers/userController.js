@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User, Partner } = require('../models');
 const { comparePassword } = require('../helpers/bcrypt');
 const { generateToken } = require('../helpers/jwt');
 
@@ -81,6 +81,29 @@ class userController{
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Failed to fetch users", error });
+        }
+    }
+    static async getUserById(req, res) {
+        try {
+            const { id } = req.params;
+
+            const user = await User.findByPk(id, {
+                include: {
+                    model: Partner,
+                    as: 'partner', 
+                    attributes: ['id', 'nama_partner', 'logo_partner', 'api_key', 'status']
+                },
+                attributes: { exclude: ['password'] } 
+            });
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            res.status(200).json({ message: 'User retrieved successfully', user });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Failed to fetch user', error });
         }
     }   
 }

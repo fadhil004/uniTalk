@@ -19,5 +19,6 @@ router.get('/chats', authentication, authorizePartner, chatController.getPartner
 router.post('/register', userController.registerUser);
 router.post('/login', userController.login);
 router.get('/users', authentication, authorizeAdmin, userController.getAllUsers);
+router.get('/users/:id', authentication, authorizeAdmin, userController.getUserById);
 
 module.exports = router

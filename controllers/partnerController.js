@@ -1,4 +1,4 @@
-const { Partner } = require('../models');
+const { Partner, User } = require('../models');
 
 class partnerController{
     static async registerPartner(req, res){

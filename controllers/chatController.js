@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const { Chat } = require('../models');
 
 class chatController{
@@ -78,7 +79,7 @@ class chatController{
             }
 
             const groupChats = await Chat.findAll({
-                where: { partnerId, id_reference: { $ne: null } }, // id_reference tidak boleh null
+                where: { partnerId, id_reference: { [Op.ne]: null } }, // id_reference tidak boleh null
                 attributes: ['id', 'id_sender', 'id_receiver', 'id_reference', 'pesan', 'edited', 'createdAt'],
                 order: [['createdAt', 'DESC']]
             });
