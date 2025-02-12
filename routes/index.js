@@ -3,7 +3,8 @@ const router = express.Router();
 
 const partnerController = require('../controllers/partnerController');
 const userController  = require('../controllers/userController');
-const chatController = require('../controllers/chatController')
+const chatController = require('../controllers/chatController');
+const dashboardController = require('../controllers/dashboardController');
 const { authentication } = require('../middlewares/authentication');
 const { authorizeAdmin, authorizePartner } = require('../middlewares/authorization');
 
@@ -20,5 +21,8 @@ router.post('/register', userController.registerUser);
 router.post('/login', userController.login);
 router.get('/users', authentication, authorizeAdmin, userController.getAllUsers);
 router.get('/users/:id', authentication, authorizeAdmin, userController.getUserById);
+
+//dashboardController
+router.get('/', dashboardController.index)
 
 module.exports = router
