@@ -23,6 +23,9 @@ router.get('/users', authentication, authorizeAdmin, userController.getAllUsers)
 router.get('/users/:id', authentication, authorizeAdmin, userController.getUserById);
 
 //dashboardController
-router.get('/', dashboardController.index)
+router.get('/', dashboardController.dashboardPartner)
+router.get('/partner', dashboardController.partner)
+router.get('/chat', dashboardController.chat)
+router.get('/help-center', dashboardController.helpCenter)
 
 module.exports = router
