@@ -21,11 +21,17 @@ router.post('/register', userController.registerUser);
 router.post('/login', userController.login);
 router.get('/users', authentication, authorizeAdmin, userController.getAllUsers);
 router.get('/users/:id', authentication, authorizeAdmin, userController.getUserById);
+router.get('/login', userController.formLogin);
+router.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
 
 //dashboardController
-router.get('/', dashboardController.dashboardPartner)
-router.get('/partner', dashboardController.partner)
-router.get('/chat', dashboardController.chat)
-router.get('/help-center', dashboardController.helpCenter)
+router.get('/', authentication, dashboardController.dashboardPartner)
+router.get('/partner', authentication, dashboardController.partner)
+router.get('/chat', authentication, dashboardController.chat)
+router.get('/help-center', authentication, dashboardController.helpCenter)
 
 module.exports = router

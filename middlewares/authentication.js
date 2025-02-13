@@ -5,14 +5,15 @@ const authentication = (req, res, next) => {
         let token = req.session.token;
 
         if (!token) {
-            return res.status(401).json({ message: 'You should login first!' });    
+            req.session.message = { type: 'error', text: 'You must login first!' };
+            return res.redirect('/login');    
         }
         console.log("Token dari session:", token);
         let decode = jwt.verifyToken(token);
         req.decoded = decode;
         next();
     } catch (err) {
-        res.status(401).json({ message: 'You should login first!', error: error.message });
+        res.redirect('/login');
     }
 };
 

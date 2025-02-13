@@ -29,10 +29,12 @@ class userController{
             let token = generateToken(payload);
             req.session.token = token;
 
-            res.status(201).json({ message: 'User registered successfully', user, token });
+            res.redirect('/');
+            //res.status(201).json({ message: 'User registered successfully', user, token });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: 'Failed to register user', error });
+            res.status(500).send('<script>alert("Registrasi gagal!"); window.location.href="/";</script>');
+            //res.status(500).json({ message: 'Failed to register user', error });
         }
     }; 
     static async login (req, res){
@@ -52,18 +54,22 @@ class userController{
                 };
                 let token = generateToken(payload);
                 req.session.token = token;
-                return res.status(200).json({
-                    message: `User login as ${user.role} successfully`,
-                    user,
-                    token
-                });                
+
+                return res.redirect('/');
+
+                // return res.status(200).json({
+                //     message: `User login as ${user.role} successfully`,
+                //     user,
+                //     token
+                // });                
             } else{
-                //res.redirect
-                res.status(500).json({ message: 'Failed to login user', error });
+                return res.status(400).send('<script>alert("Email atau password salah!"); window.location.href="/";</script>');
+                // res.status(500).json({ message: 'Failed to login user', error });
             }
         } catch (error) {
             console.error(error)
-            res.status(500).json({ message: 'Failed to login user', error });
+            res.status(500).send('<script>alert("Login gagal!"); window.location.href="/";</script>');
+            // res.status(500).json({ message: 'Failed to login user', error });
         }
     }
     static async getAllUsers(req, res) {
@@ -104,6 +110,16 @@ class userController{
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Failed to fetch user', error });
+        }
+    }
+    static async formLogin(req, res) {
+        try {
+            let message = req.session.message;
+            req.session.message = null; 
+            res.render('login', { message, cache: false, layout: 'login' });
+        } catch (err) {
+            console.error('Error rendering dashboard:', err);
+            res.status(500).send(err.message);
         }
     }   
 }
