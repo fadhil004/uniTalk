@@ -1,5 +1,6 @@
-const { Op } = require('sequelize')
-const { Chat } = require('../models');
+const { Op } = require('sequelize') 
+const { Chat, sequelize } = require('../models');
+const { Sequelize} = sequelize;
 
 class chatController{
     static async sendMessage(req, res) {
@@ -100,6 +101,72 @@ class chatController{
             return res.status(500).json({ message: 'Failed to fetch chats', error });
         }
     }
+    static async getChatStatistics(req, res) {
+        try {
+            const year = req.query.year || new Date().getFullYear();
+    
+            let chatStats = Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                totalPrivateChat: 0,
+                totalGroupChat: 0,
+            }));
+    
+            // Ambil data private chat
+            const privateChats = await Chat.findAll({
+                attributes: [
+                    [Sequelize.fn("DATE_PART", "month", Sequelize.col("createdAt")), "month"],
+                    [Sequelize.fn("COUNT", Sequelize.col("id")), "totalPrivateChat"],
+                ],
+                where: {
+                    id_receiver: { [Sequelize.Op.ne]: null },
+                    id_reference: null,
+                    createdAt: { 
+                        [Sequelize.Op.between]: [
+                            `${year}-01-01 00:00:00`, 
+                            `${year}-12-31 23:59:59`
+                        ]
+                    },
+                },
+                group: ["month"],
+                raw: true,
+            });
+    
+            // Ambil data group chat
+            const groupChats = await Chat.findAll({
+                attributes: [
+                    [Sequelize.fn("DATE_PART", "month", Sequelize.col("createdAt")), "month"],
+                    [Sequelize.fn("COUNT", Sequelize.col("id")), "totalGroupChat"],
+                ],
+                where: {
+                    id_reference: { [Sequelize.Op.ne]: null },
+                    createdAt: { 
+                        [Sequelize.Op.between]: [
+                            `${year}-01-01 00:00:00`, 
+                            `${year}-12-31 23:59:59`
+                        ]
+                    },
+                },
+                group: ["month"],
+                raw: true,
+            });
+    
+            // Gabungkan hasil private chat dan group chat ke dalam `chatStats`
+            privateChats.forEach((item) => {
+                chatStats[item.month - 1].totalPrivateChat = item.totalPrivateChat;
+            });
+    
+            groupChats.forEach((item) => {
+                chatStats[item.month - 1].totalGroupChat = item.totalGroupChat;
+            });
+    
+            return res.json(chatStats);
+        } catch (error) {
+            console.error("Error fetching chat statistics:", error);
+            return res.status(500).json({ message: "Internal Server Error" });
+        }
+    }
+    
+    
 }
 
 module.exports = chatController

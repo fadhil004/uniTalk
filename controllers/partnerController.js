@@ -3,13 +3,15 @@ const { Partner, User } = require('../models');
 class partnerController{
     static async registerPartner(req, res){
         try {
-            const { nama_partner, logo_partner } = req.body;
+            const { nama_partner } = req.body;
             const { id: userId } = req.decoded;
 
             let user = await User.findByPk(userId);
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
+
+            let logo_partner = req.file ? req.file.filename : null;
 
             let partner = await Partner.create({
                 nama_partner,

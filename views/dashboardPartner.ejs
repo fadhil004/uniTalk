@@ -1,146 +1,226 @@
-<% if (message) { %>
-  <div id="alertBox" class="alert <%= message.type %>">
-      <%= message.text %>
+<% if (!user.partnerIds) { %>
+  <div class="modal-overlay"></div> <!-- Background blur -->
+  
+  <div id="partnerModal" class="modal-container">
+      <div class="modal-content">
+          <h2>Register as Partner</h2>
+          <p>To continue using our services, please register as a partner first.</p>
+          <a href="/partner" class="btn btn-primary">Register Now</a>
+      </div>
   </div>
 <% } %>
 
-<style>
-  .alert {
-      position: fixed;
-      top: -50px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 15px;
-      border-radius: 5px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      font-size: 16px;
-      transition: top 0.5s ease-in-out;
-      z-index: 10000;
-  }
 
-  .alert.success {
-      background-color: #4CAF50; /* Warna hijau */
-      color: white;
-  }
+  <% if (message) { %>
+    <div id="alertBox" class="alert <%= message.type %>">
+        <%= message.text %>
+    </div>
+  <% } %>
 
-  .alert.error {
-      background-color: #f44336; /* Warna merah */
-      color: white;
-  }
+  <style>
+    .alert {
+        position: fixed;
+        top: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
+        transition: top 0.5s ease-in-out;
+        z-index: 10000;
+    }
 
-  .alert.show {
-      top: 20px;
-  }
-</style>
+    .alert.success {
+        background-color: #4CAF50; /* Warna hijau */
+        color: white;
+    }
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-      let alertBox = document.getElementById("alertBox");
-      if (alertBox) {
-          setTimeout(() => {
-              alertBox.classList.add("show");
-              setTimeout(() => {
-                  alertBox.classList.remove("show");
-              }, 3000); // Sembunyikan setelah 3 detik
-          }, 500);
+    .alert.error {
+        background-color: #f44336; /* Warna merah */
+        color: white;
+    }
+
+    .alert.show {
+        top: 20px;
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let alertBox = document.getElementById("alertBox");
+        if (alertBox) {
+            setTimeout(() => {
+                alertBox.classList.add("show");
+                setTimeout(() => {
+                    alertBox.classList.remove("show");
+                }, 3000); // Sembunyikan setelah 3 detik
+            }, 500);
+        }
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+  <div class="content-wrapper">
+    <div class="page-header">
+      <h3 class="page-title">
+        <span class="page-title-icon bg-gradient-primary text-white me-2">
+          <i class="mdi mdi-home"></i>
+        </span> Dashboard Partner
+      </h3>
+    </div>
+    <div class="row">
+      <div class="col-md-4 stretch-card grid-margin">
+        <div class="card bg-gradient-info card-img-holder text-white">
+          <div class="card-body">
+            <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
+            <h1 class="mb-4 ">Partner Status</h1>
+            <h3 class="p-3 text-center font-weight-normal badge-success">Accepted</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 stretch-card grid-margin">
+        <div class="card bg-gradient-danger card-img-holder text-white">
+          <div class="card-body">
+            <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
+            <h1 class=" mb-4">Joining Date   
+            </h1>
+            <h3 class="font-weight-normal text-end">4 September 2002</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 stretch-card grid-margin">
+        <div class="card bg-gradient-success card-img-holder text-white">
+          <div class="card-body">
+            <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
+            <h1 class="mb-4">Total Interactions
+            </h1>
+            <h3 class="font-weight-normal text-end">150 Chats</h3>
+            <h3 class="font-weight-normal text-end">25 Attachments</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Chat Statistics Per Month</h4>
+            <select id="yearFilter" class="form-control w-25 mb-3">
+              <!-- Fill by JS -->
+            </select>
+            <canvas id="chatBarChart" style="max-height: 400px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-5 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body p-0 d-flex">
+            <div id="inline-datepicker" class="datepicker datepicker-custom"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Recent Attachments</h4>
+            <div class="row mt-3">
+              <div class="col-6 pe-1">
+                <img src="assets/images/dashboard/img_1.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+                <img src="assets/images/dashboard/img_4.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+              </div>
+              <div class="col-6 ps-1">
+                <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+                <img src="assets/images/dashboard/img_3.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+              </div>
+              <div class="col-6 pe-1">
+                <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+              </div>
+              <div class="col-6 ps-1">
+                <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const ctx = document.getElementById("chatBarChart").getContext("2d");
+      let chatChart;
+
+      // **Isi dropdown tahun secara otomatis**
+      const yearFilter = document.getElementById("yearFilter");
+      const currentYear = new Date().getFullYear();
+      for (let i = currentYear; i >= currentYear - 5; i--) {
+          let option = new Option(i, i);
+          yearFilter.appendChild(option);
       }
-  });
-</script>
 
-<div class="content-wrapper">
-  <div class="page-header">
-    <h3 class="page-title">
-      <span class="page-title-icon bg-gradient-primary text-white me-2">
-        <i class="mdi mdi-home"></i>
-      </span> Dashboard Partner
-    </h3>
-  </div>
-  <div class="row">
-    <div class="col-md-4 stretch-card grid-margin">
-      <div class="card bg-gradient-info card-img-holder text-white">
-        <div class="card-body">
-          <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
-          <h1 class="mb-4 ">Partner Status</h1>
-          <h3 class="p-3 text-center font-weight-normal badge-success">Accepted</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 stretch-card grid-margin">
-      <div class="card bg-gradient-danger card-img-holder text-white">
-        <div class="card-body">
-          <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
-          <h1 class=" mb-4">Joining Date   
-          </h1>
-          <h3 class="font-weight-normal text-end">4 September 2002</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 stretch-card grid-margin">
-      <div class="card bg-gradient-success card-img-holder text-white">
-        <div class="card-body">
-          <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
-          <h1 class="mb-4">Total Interactions
-          </h1>
-          <h3 class="font-weight-normal text-end">150 Chats Sent</h3>
-          <h3 class="font-weight-normal text-end">150 Chats Received</h3>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 grid-margin stretch-card">
-      <div class="card">
-        <div class="card-body">
-          <div class="clearfix">
-            <h4 class="card-title float-start">Total Chat Sent</h4>
-            <div id="visit-sale-chart-legend" class="rounded-legend legend-horizontal legend-top-right float-end"></div>
-          </div>
-          <canvas id="visit-sale-chart" class="mt-4"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 grid-margin stretch-card">
-      <div class="card">
-        <div class="card-body">
-          <h4 class="card-title">Traffic Sources</h4>
-          <div class="doughnutjs-wrapper d-flex justify-content-center">
-            <canvas id="traffic-chart"></canvas>
-          </div>
-          <div id="traffic-chart-legend" class="rounded-legend legend-vertical legend-bottom-left pt-4"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-lg-5 grid-margin stretch-card">
-      <div class="card">
-        <div class="card-body p-0 d-flex">
-          <div id="inline-datepicker" class="datepicker datepicker-custom"></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-7 grid-margin stretch-card">
-      <div class="card">
-        <div class="card-body">
-          <h4 class="card-title">Recent Attachments</h4>
-          <div class="row mt-3">
-            <div class="col-6 pe-1">
-              <img src="assets/images/dashboard/img_1.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-              <img src="assets/images/dashboard/img_4.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-            </div>
-            <div class="col-6 ps-1">
-              <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-              <img src="assets/images/dashboard/img_3.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-            </div>
-            <div class="col-6 pe-1">
-              <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-            </div>
-            <div class="col-6 ps-1">
-              <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+      function updateChart(year) {
+          fetch(`/api/chats/chat-statistics?year=${year}`)
+              .then(response => response.json())
+              .then(data => {
+                  const privateChats = Array(12).fill(0);
+                  const groupChats = Array(12).fill(0);
+
+                  data.forEach(item => {
+                      const monthIndex = item.month - 1;
+                      privateChats[monthIndex] = item.totalPrivateChat || 0;
+                      groupChats[monthIndex] = item.totalGroupChat || 0;
+                  });
+
+                  if (chatChart) {
+                      chatChart.destroy();
+                  }
+
+                  chatChart = new Chart(ctx, {
+                      type: "bar",
+                      data: {
+                          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                          datasets: [
+                              {
+                                  label: "Private Chat",
+                                  backgroundColor: "#4CAF50",
+                                  borderColor: "#388E3C",
+                                  borderWidth: 1,
+                                  data: privateChats,
+                              },
+                              {
+                                  label: "Group Chat",
+                                  backgroundColor: "#f44336",
+                                  borderColor: "#D32F2F",
+                                  borderWidth: 1,
+                                  data: groupChats,
+                              },
+                          ],
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                              y: {
+                                  beginAtZero: true,
+                              },
+                          },
+                      },
+                  });
+              })
+              .catch(error => console.error("Error fetching data:", error));
+      }
+
+      // **Tampilkan data tahun sekarang saat pertama kali load**
+      updateChart(currentYear);
+
+      // **Event Listener untuk Filter Tahun**
+      document.getElementById("yearFilter").addEventListener("change", function () {
+          updateChart(this.value);
+      });
+  });
+
+  </script>

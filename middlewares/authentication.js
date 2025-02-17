@@ -28,7 +28,8 @@ const authentication = async (req, res, next) => {
             id: user.id,
             name: user.name,
             role: user.role,
-            partnerName: user.partner ? user.partner.name_partner : 'Register as partner first!'
+            partnerId : user.partnerId,
+            partnerName: user.partner ? user.partner.nama_partner : 'Register as partner first!'
         };
 
         next();

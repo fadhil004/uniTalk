@@ -1,0 +1,41 @@
+  <style>
+    /* Navbar tetap terlihat di atas modal */
+    .sidebar {
+        position: relative;
+        z-index: 1050; /* Pastikan lebih tinggi dari modal */
+        background: rgba(255, 255, 255, 0.95); /* Buat solid agar tetap terlihat */
+    }
+
+    /* Modal Overlay dengan Efek Blur */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(10px); /* Efek blur pada latar */
+        background: rgba(0, 0, 0, 0.3); /* Warna gelap semi transparan */
+        z-index: 1000; /* Harus lebih rendah dari navbar */
+    }
+
+    /* Modal Container */
+    .modal-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 400px;
+        text-align: center;
+        z-index: 1100; /* Lebih tinggi dari navbar */
+    }
+
+    .modal-content h2 {
+        margin-bottom: 10px;
+    }
+
+  </style>
+  

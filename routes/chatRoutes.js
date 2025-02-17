@@ -10,5 +10,7 @@ router.post('/send', authentication, authorizePartner, chatController.sendMessag
 router.get('/', authentication, authorizeAdmin, chatController.getAllMessages); 
 router.delete('/:id', authentication, authorizePartner, chatController.deleteMessage);
 router.put('/:id', authentication, authorizePartner, chatController.editChat);
+router.get('/chat-statistics', authentication, authorizePartner, chatController.getChatStatistics);
+
 
 module.exports = router

@@ -5,11 +5,12 @@ const partnerController = require('../controllers/partnerController');
 const userController  = require('../controllers/userController');
 const chatController = require('../controllers/chatController');
 const dashboardController = require('../controllers/dashboardController');
+const { upload } = require('../helpers/upload');
 const { authentication } = require('../middlewares/authentication');
 const { authorizeAdmin, authorizePartner, authorization } = require('../middlewares/authorization');
 
 //partnerController
-router.post('/partners/register', authentication, partnerController.registerPartner); 
+router.post('/partners/register', authentication, upload.single('logo_partner'), partnerController.registerPartner); 
 router.get('/partners', authentication, authorizeAdmin, partnerController.getAllPartners); 
 router.delete('/partners/:id', authentication, authorizeAdmin, partnerController.deletePartner);
 
