@@ -6,7 +6,7 @@ const userController  = require('../controllers/userController');
 const chatController = require('../controllers/chatController');
 const dashboardController = require('../controllers/dashboardController');
 const { authentication } = require('../middlewares/authentication');
-const { authorizeAdmin, authorizePartner } = require('../middlewares/authorization');
+const { authorizeAdmin, authorizePartner, authorization } = require('../middlewares/authorization');
 
 //partnerController
 router.post('/partners/register', authentication, partnerController.registerPartner); 
@@ -29,9 +29,11 @@ router.get('/logout', (req, res) => {
 
 
 //dashboardController
-router.get('/', authentication, dashboardController.dashboardPartner)
-router.get('/partner', authentication, dashboardController.partner)
-router.get('/chat', authentication, dashboardController.chat)
-router.get('/help-center', authentication, dashboardController.helpCenter)
+router.get('/', authentication, authorization, dashboardController.dashboardPartner)
+router.get('/partner', authentication, authorization, dashboardController.partner)
+router.get('/chat', authentication, authorization, dashboardController.chat)
+router.get('/help-center', authentication, authorization, dashboardController.helpCenter)
+router.get('/admin', authentication, authorizeAdmin, dashboardController.dashboardAdmin)
+router.get('/partnersData', authentication, authorizeAdmin, dashboardController.partnersData)
 
 module.exports = router

@@ -1,0 +1,48 @@
+<% if (message) { %>
+    <div id="alertBox" class="alert <%= message.type %>">
+        <%= message.text %>
+    </div>
+  <% } %>
+  
+  <style>
+    .alert {
+        position: fixed;
+        top: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
+        transition: top 0.5s ease-in-out;
+        z-index: 10000;
+    }
+  
+    .alert.success {
+        background-color: #4CAF50; /* Warna hijau */
+        color: white;
+    }
+  
+    .alert.error {
+        background-color: #f44336; /* Warna merah */
+        color: white;
+    }
+  
+    .alert.show {
+        top: 20px;
+    }
+  </style>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let alertBox = document.getElementById("alertBox");
+        if (alertBox) {
+            setTimeout(() => {
+                alertBox.classList.add("show");
+                setTimeout(() => {
+                    alertBox.classList.remove("show");
+                }, 3000); // Sembunyikan setelah 3 detik
+            }, 500);
+        }
+    });
+  </script>

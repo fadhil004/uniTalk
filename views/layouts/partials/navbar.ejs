@@ -1,39 +1,63 @@
 <ul class="nav">
-    <li class="nav-item nav-profile">
+  <li class="nav-item nav-profile">
       <a href="#" class="nav-link">
-        <div class="nav-profile-image">
-          <img src="assets/images/faces-clipart/pic-1.png" alt="profile" />
-          <span class="login-status online"></span>
-          <!--change to offline or busy as needed-->
-        </div>
-        <div class="nav-profile-text d-flex flex-column">
-          <span class="font-weight-bold mb-2">M. Fadhil</span>
-          <span class="text-secondary text-small">Universitas Riau</span>
-        </div>
+          <div class="nav-profile-image">
+              <img src="/assets/images/faces-clipart/pic-1.png" alt="profile" />
+              <span class="login-status online"></span>
+          </div>
+          <div class="nav-profile-text d-flex flex-column">
+              <span class="font-weight-bold mb-2"><%= user ? user.name : 'Guest' %></span>
+              <span class="text-secondary text-small">
+                <% if (user && user.role === 'admin') { %>
+                  Admin
+                <% } else { %>
+                  <%= user ? user.partnerName : '' %>
+                </span>
+                <% } %>                
+              </span>
+          </div>
       </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link " href="/">
-        <span class="menu-title ">Dashboard</span>
-        <i class="fa fa-home menu-icon "></i>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="/partner" >
-        <span class="menu-title">Partner</span>
-        <i class="fa fa-user menu-icon"></i>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text" href="/chat" >
-        <span class="menu-title">Chat</span>
-        <i class="fa fa-wechat menu-icon"></i>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text" href="/help-center" >
-        <span class="menu-title">Help Center</span>
-        <i class="fa fa-question-circle menu-icon"></i>
-      </a>
-    </li>
-  </ul>
+  </li>
+
+  <% if (user && user.role === 'partner') { %>
+      <li class="nav-item">
+          <a class="nav-link" href="/">
+              <span class="menu-title">Dashboard</span>
+              <i class="fa fa-home menu-icon"></i>
+          </a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link" href="/partner">
+              <span class="menu-title">Partner</span>
+              <i class="fa fa-user menu-icon"></i>
+          </a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link" href="/chat">
+              <span class="menu-title">Chat</span>
+              <i class="fa fa-wechat menu-icon"></i>
+          </a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link" href="/help-center">
+              <span class="menu-title">Help Center</span>
+              <i class="fa fa-question-circle menu-icon"></i>
+          </a>
+      </li>
+  <% } %>
+
+  <% if (user && user.role === 'admin') { %>
+      <li class="nav-item">
+          <a class="nav-link" href="/admin">
+              <span class="menu-title">Dashboard Admin</span>
+              <i class="fa fa-tachometer menu-icon"></i>
+          </a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link" href="/partnersData">
+              <span class="menu-title">Partners Data</span>
+              <i class="fa fa-database menu-icon"></i>
+          </a>
+      </li>
+  <% } %>
+</ul>

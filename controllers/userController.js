@@ -28,7 +28,6 @@ class userController{
             }
             let token = generateToken(payload);
             req.session.token = token;
-
             res.redirect('/');
             //res.status(201).json({ message: 'User registered successfully', user, token });
         } catch (error) {
@@ -55,15 +54,21 @@ class userController{
                 let token = generateToken(payload);
                 req.session.token = token;
 
-                return res.redirect('/');
-
+                req.session.message = { type: 'success', text: `Login success! Welcome, ${user.name}.` };
+                
+                if (user.role === 'admin') {
+                    return res.redirect('/admin'); 
+                } else {
+                    return res.redirect('/'); 
+                }
                 // return res.status(200).json({
                 //     message: `User login as ${user.role} successfully`,
                 //     user,
                 //     token
                 // });                
             } else{
-                return res.status(400).send('<script>alert("Email atau password salah!"); window.location.href="/";</script>');
+                req.session.message = { type: 'error', text: 'Email or password is incorrect!' };
+                return res.redirect('/login');
                 // res.status(500).json({ message: 'Failed to login user', error });
             }
         } catch (error) {
@@ -75,11 +80,11 @@ class userController{
     static async getAllUsers(req, res) {
         try {
             const users = await User.findAll({
-                // include: {
-                //     model: Partner,
-                //     as: 'partner', // Relasi dengan Partner
-                //     attributes: ['id', 'name'] // Pilih atribut yang ingin ditampilkan
-                // },
+                include: {
+                    model: Partner,
+                    as: 'partner', // Relasi dengan Partner
+                    attributes: ['id', 'nama_partner', 'status'] // Pilih atribut yang ingin ditampilkan
+                },
                 attributes: { exclude: ['password'] } // Jangan tampilkan password
             });
 

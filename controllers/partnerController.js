@@ -14,6 +14,7 @@ class partnerController{
             let partner = await Partner.create({
                 nama_partner,
                 logo_partner,
+                status: 'pending'
             });
 
             partner.api_key = partner.id;

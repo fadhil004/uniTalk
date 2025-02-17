@@ -3,7 +3,8 @@ const { Partner, User } = require('../models');
 const authorizePartner = async (req, res, next) => {
     try {
         if (req.decoded.role !== 'partner') {
-            return res.status(403).json({ message: 'Access denied' });
+            req.session.message = { type: 'error', text: 'Access Denied!' };
+            return res.redirect('/admin');
         }
 
         const partner = await Partner.findByPk(req.decoded.partnerId);
@@ -18,10 +19,23 @@ const authorizePartner = async (req, res, next) => {
     }
 };
 
+const authorization = async (req, res, next) => {
+    try {
+        if (req.decoded.role !== 'partner') {
+            req.session.message = { type: 'error', text: 'Access Denied!' };
+            return res.redirect('/admin');
+        }
+        next();
+    } catch (error) {
+        return res.status(500).json({ message: 'Authorization failed', error });
+    }
+}
+
 const authorizeAdmin = async (req, res, next) => {
     try {
         if (req.decoded.role !== 'admin') {
-            return res.status(403).json({ message: 'Access denied' });
+            req.session.message = { type: 'error', text: 'Access Denied!' };
+            return res.redirect('/');
         }
 
         const admin = await User.findByPk(req.decoded.id);
@@ -36,4 +50,4 @@ const authorizeAdmin = async (req, res, next) => {
     }
 };
 
-module.exports = { authorizePartner, authorizeAdmin };
+module.exports = { authorizePartner, authorizeAdmin, authorization };

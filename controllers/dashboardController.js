@@ -1,8 +1,14 @@
 class dashboardController {
     static async dashboardPartner(req, res) {
         try {
-            const user = res.locals.user || null; 
-            res.render('dashboardPartner', { user, cache: false });
+            let message = req.session.message;
+            req.session.message = null; 
+
+            res.render('dashboardPartner', { 
+                message, 
+                user: req.user, 
+                cache: false 
+            });
         } catch (err) {
             console.error('Error rendering dashboard:', err);
             res.status(500).send(err.message);
@@ -10,8 +16,10 @@ class dashboardController {
     }
     static async partner(req, res) {
         try {
-            const user = res.locals.user || null; 
-            res.render('partner', { user, cache: false });
+            res.render('partner', { 
+                user: req.user, 
+                cache: false 
+            });
         } catch (err) {
             console.error('Error rendering partner:', err);
             res.status(500).send(err.message);
@@ -19,8 +27,10 @@ class dashboardController {
     }
     static async chat(req, res) {
         try {
-            const user = res.locals.user || null; 
-            res.render('chat', { user, cache: false });
+            res.render('chat', { 
+                user: req.user, 
+                cache: false 
+            });
         } catch (err) {
             console.error('Error rendering chat:', err);
             res.status(500).send(err.message);
@@ -28,10 +38,37 @@ class dashboardController {
     }
     static async helpCenter(req, res) {
         try {
-            const user = res.locals.user || null; 
-            res.render('helpCenter', { user, cache: false });
+            res.render('helpCenter', { 
+                user: req.user, 
+                cache: false 
+            });
         } catch (err) {
             console.error('Error rendering help center:', err);
+            res.status(500).send(err.message);
+        }
+    }
+    static async dashboardAdmin(req, res) {
+        try {
+            let message = req.session.message;
+            req.session.message = null; 
+            res.render('dashboardAdmin', { 
+                message,
+                user: req.user, 
+                cache: false 
+            });
+        } catch (err) {
+            console.error('Error rendering dashboard admin:', err);
+            res.status(500).send(err.message);
+        }
+    }
+    static async partnersData(req, res) {
+        try {
+            res.render('partnersData', { 
+                user: req.user, 
+                cache: false 
+            });
+        } catch (err) {
+            console.error('Error rendering partners data:', err);
             res.status(500).send(err.message);
         }
     }
