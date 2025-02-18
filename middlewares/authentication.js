@@ -1,5 +1,6 @@
 const jwt = require('../helpers/jwt');
 const { User, Partner } = require('../models');
+const moment = require('moment');
 
 const authentication = async (req, res, next) => {
     try {
@@ -24,12 +25,25 @@ const authentication = async (req, res, next) => {
             return res.redirect('/login');
         }
 
+        let joiningDateFormatted = '-'; // Default jika null
+        if (user.partner && user.partner.createdAt) {
+            joiningDateFormatted = new Intl.DateTimeFormat('en-US', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            }).format(new Date(user.partner.createdAt));
+        }
+
         req.user = {
             id: user.id,
             name: user.name,
             role: user.role,
-            partnerId : user.partnerId,
-            partnerName: user.partner ? user.partner.nama_partner : 'Register as partner first!'
+            email: user.email,
+            partnerId: user.partnerId || null,
+            logo_partner: user.partner && user.partner.logo_partner ? user.partner.logo_partner : null,
+            partnerName: user.partner ? user.partner.nama_partner : 'Register as partner first!',
+            status: user.partner && user.partner.status ? user.partner.status : null,
+            joining_date: joiningDateFormatted
         };
 
         next();

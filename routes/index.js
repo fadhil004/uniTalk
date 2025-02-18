@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
-
 const partnerController = require('../controllers/partnerController');
 const userController  = require('../controllers/userController');
 const chatController = require('../controllers/chatController');
 const dashboardController = require('../controllers/dashboardController');
-const { upload } = require('../helpers/upload');
+const { uploadSingle } = require('../helpers/uploadLogo');
 const { authentication } = require('../middlewares/authentication');
 const { authorizeAdmin, authorizePartner, authorization } = require('../middlewares/authorization');
 
 //partnerController
-router.post('/partners/register', authentication, upload.single('logo_partner'), partnerController.registerPartner); 
+router.post('/partners/register', authentication, uploadSingle('logo_partner'), partnerController.registerPartner); 
 router.get('/partners', authentication, authorizeAdmin, partnerController.getAllPartners); 
 router.delete('/partners/:id', authentication, authorizeAdmin, partnerController.deletePartner);
 
@@ -27,6 +26,7 @@ router.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
 });
+router.post('/edit-profile', uploadSingle('logo_partner'), authentication, authorizePartner, userController.updateProfile)
 
 
 //dashboardController

@@ -1,41 +1,240 @@
-<div class="content-wrapper">
-    <div class="page-header">
-        <h3 class="page-title">
-          <span class="page-title-icon bg-gradient-primary text-white me-2">
-            <i class="fa fa-user"></i>
-          </span> Profile Partner
-        </h3>
-      </div>
-      <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Form Registration</h4>
-                <p class="card-description"> regist as a partner to use the features </p>
-                <form class="forms-sample" action="/register" method="post" enctype="multipart/form-data">
-                  <div class="form-group row">
-                    <label for="exampleInputName1" class="col-sm-3 col-form-label">Partner Name</label>
-                    <div class="col-sm-9">
-                      <input type="text" class="form-control" name="nama_partner" placeholder="Partner Name">
+  <% if (message) { %>
+    <div id="alertBox" class="alert <%= message.type %>">
+        <%= message.text %>
+    </div>
+  <% } %>
+
+  <style>
+    .alert {
+        position: fixed;
+        top: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
+        transition: top 0.5s ease-in-out;
+        z-index: 10000;
+    }
+
+    .alert.success {
+        background-color: #4CAF50; /* Warna hijau */
+        color: white;
+    }
+
+    .alert.error {
+        background-color: #f44336; /* Warna merah */
+        color: white;
+    }
+
+    .alert.show {
+        top: 20px;
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let alertBox = document.getElementById("alertBox");
+        if (alertBox) {
+            setTimeout(() => {
+                alertBox.classList.add("show");
+                setTimeout(() => {
+                    alertBox.classList.remove("show");
+                }, 3000); // Sembunyikan setelah 3 detik
+            }, 500);
+        }
+    });
+  </script>
+
+  <div class="content-wrapper">
+      <div class="page-header">
+          <h3 class="page-title">
+            <span class="page-title-icon bg-gradient-primary text-white me-2">
+              <i class="fa fa-user"></i>
+            </span> Profile Partner
+          </h3>
+        </div>
+        <% if (!user.partnerId) { %>
+        <div class="row">
+          <div class="col-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Form Registration</h4>
+                  <p class="card-description"> regist as a partner to use the features </p>
+                  <form class="forms-sample" action="partners/register" method="post" enctype="multipart/form-data">
+                    <div class="form-group row">
+                      <label for="exampleInputName1" class="col-sm-3 col-form-label">Partner Name</label>
+                      <div class="col-sm-9">
+                        <input type="text" class="form-control" name="nama_partner" placeholder="Partner Name" required>
+                      </div>
                     </div>
-                  </div>
-                  <div class="form-group row">
-                    <label class="col-sm-3 col-form-label">File upload</label>
-                    <div class="col-sm-9">
-                      <input type="file" name="logo_partner" class="file-upload-default">
-                      <div class="input-group col-xs-12">
-                        <input type="text" class="form-control file-upload-info" disabled placeholder="Upload Image">
-                        <span class="input-group-append">
-                          <button class="file-upload-browse btn btn-gradient-primary py-3" type="button">Upload</button>
-                        </span>
+                    <div class="form-group row">
+                      <label class="col-sm-3 col-form-label">Partner Logo</label>
+                      <div class="col-sm-9">
+                        <input type="file" name="logo_partner" class="file-upload-default" id="logo_partner" required>
+                        <div class="input-group col-xs-12">
+                          <input type="text" class="form-control file-upload-info" disabled placeholder="Upload Image">
+                          <span class="input-group-append">
+                            <button class="file-upload-browse btn btn-gradient-primary py-3" type="button">Upload</button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-gradient-primary me-2">Submit</button>
+                    <button type="reset" class="btn btn-light">Cancel</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+        </div>
+        <% } %>
+        <% if (user && user.partnerId) { %>
+        <div class="row">
+          <div class="col-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title text-center mb-5">User & Partner Profile</h4>
+                  <form class="forms-sample" action="/edit-profile" method="post" enctype="multipart/form-data">
+                  <div class="row">
+                    <div class="col-3 d-flex justify-content-center">
+                        <img src="<%= user && user.logo_partner ? '/database/logo_partner/' + user.logo_partner : '/assets/images/faces-clipart/pic-1.png' %>" alt="profile" style="max-height: 200px;"/>
+                        <span class="login-status online"></span>
+                    </div>
+                    <div class="col-9">
+                      <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">User Name</label>
+                        <div class="col-sm-9">
+                          <input type="text" class="form-control" name="name" placeholder="User Name" value="<%= user.name %>" readonly>
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Email</label>
+                        <div class="col-sm-9">
+                          <input type="email" class="form-control" name="email" placeholder="Email" value="<%= user.email %>" readonly>
+                        </div>
+                      </div>
+                      <div class="form-group row password-group d-none">
+                        <label class="col-sm-3 col-form-label">New Password</label>
+                        <div class="col-sm-9">
+                          <input type="password" class="form-control password-input" name="password" placeholder="New Password" id="newPassword">
+                        </div>
+                      </div>
+                      <div class="form-group row password-group d-none">
+                        <label class="col-sm-3 col-form-label">Re-enter Password</label>
+                        <div class="col-sm-9">
+                          <input type="password" class="form-control password-input" placeholder="Re-enter Password" id="reenterPassword">
+                          <small id="passwordMismatch" class="text-danger d-none">Passwords do not match!</small>
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Partner Name</label>
+                        <div class="col-sm-9">
+                          <input type="text" class="form-control" name="nama_partner" placeholder="Partner Name" value="<%= user.partnerName %>" readonly>
+                        </div>
+                      </div>
+                      <div class="form-group row logo-upload d-none">
+                        <label class="col-sm-3 col-form-label">Logo Partner</label>
+                        <div class="col-sm-9">
+                          <input type="file" name="logo_partner" class="file-upload-default" id="logo_partner">
+                          <div class="input-group col-xs-12">
+                            <input type="text" class="form-control file-upload-info" disabled placeholder="Upload Image">
+                            <span class="input-group-append">
+                              <button class="file-upload-browse btn btn-gradient-primary py-3" type="button">Upload</button>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <button type="submit" class="btn btn-gradient-primary me-2">Submit</button>
-                  <button type="reset" class="btn btn-light">Cancel</button>
-                </form>
+                  <div class="row">
+                    <div class="form-group row">
+                      <label class="col-sm-3 col-form-label">API Key</label>
+                      <div class="col-sm-9">
+                        <p class="form-control"><%= user.partnerId %> </p>
+                      </div>
+                    </div>
+                    <div class="form-group row">
+                      <label class="col-sm-3 col-form-label">Status Partner</label>
+                      <div class="col-sm-9">
+                        <p class="form-control"><%= user.status %> </p>
+                      </div>
+                    </div>
+                    <div class="form-group row">
+                      <label class="col-sm-3 col-form-label">Joining Date</label>
+                      <div class="col-sm-9">
+                        <p class="form-control"><%= user.joining_date %> </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-warning me-2" id="editProfileBtn">Edit Profile</button>
+                    <button type="submit" class="btn btn-gradient-primary me-2 d-none" id="saveProfileBtn">Save</button>
+                    <button type="reset" class="btn btn-danger d-none" id="cancelEditBtn">Cancel</button>
+                  </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
-      </div>
-</div>
+        </div>
+        <% } %>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const uploadButton = document.querySelector(".file-upload-browse");
+      const fileInput = document.querySelector("#logo_partner");
+      const fileInfo = document.querySelector(".file-upload-info");
+
+      uploadButton.addEventListener("click", function() {
+          fileInput.click(); // Saat tombol ditekan, trigger klik di input file
+      });
+
+      fileInput.addEventListener("change", function() {
+          if (fileInput.files.length > 0) {
+              fileInfo.value = fileInput.files[0].name; // Tampilkan nama file yang dipilih
+          }
+      });
+  });
+
+  </script>
+
+  <script>
+    document.getElementById('editProfileBtn').addEventListener('click', function () {
+        document.querySelectorAll('input[readonly]').forEach(input => input.removeAttribute('readonly'));
+        document.querySelectorAll('.password-group, .logo-upload').forEach(el => el.classList.remove('d-none'));
+        document.getElementById('editProfileBtn').classList.add('d-none');
+        document.getElementById('saveProfileBtn').classList.remove('d-none');
+        document.getElementById('cancelEditBtn').classList.remove('d-none');
+    });
+
+    document.getElementById('cancelEditBtn').addEventListener('click', function () {
+        document.querySelectorAll('input[readonly]').forEach(input => input.setAttribute('readonly', true));
+        document.querySelectorAll('.password-group, .logo-upload').forEach(el => el.classList.add('d-none'));
+        document.querySelector('form').reset();
+        document.getElementById('editProfileBtn').classList.remove('d-none');
+        document.getElementById('saveProfileBtn').classList.add('d-none');
+        document.getElementById('cancelEditBtn').classList.add('d-none');
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+    const newPassword = document.getElementById("newPassword");
+    const reenterPassword = document.getElementById("reenterPassword");
+    const passwordMismatch = document.getElementById("passwordMismatch");
+    const saveProfileBtn = document.getElementById("saveProfileBtn");
+
+    function validatePassword() {
+        if (newPassword.value !== reenterPassword.value) {
+            passwordMismatch.classList.remove("d-none");
+            saveProfileBtn.setAttribute("disabled", true);
+        } else {
+            passwordMismatch.classList.add("d-none");
+            saveProfileBtn.removeAttribute("disabled");
+        }
+    }
+
+    newPassword.addEventListener("input", validatePassword);
+    reenterPassword.addEventListener("input", validatePassword);
+    });
+
+  </script>

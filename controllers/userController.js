@@ -1,6 +1,8 @@
 const { User, Partner } = require('../models');
-const { comparePassword } = require('../helpers/bcrypt');
+const { comparePassword, hashPassword } = require('../helpers/bcrypt');
 const { generateToken } = require('../helpers/jwt');
+const path = require('path');
+const fs = require('fs');
 
 class userController{
     static async registerUser (req, res){
@@ -28,6 +30,8 @@ class userController{
             }
             let token = generateToken(payload);
             req.session.token = token;
+
+            req.session.message = { type: 'success', text: `Registered successfully! Welcome, ${user.name}.` };
             res.redirect('/');
             //res.status(201).json({ message: 'User registered successfully', user, token });
         } catch (error) {
@@ -126,7 +130,65 @@ class userController{
             console.error('Error rendering dashboard:', err);
             res.status(500).send(err.message);
         }
-    }   
+    }
+    
+    static async updateProfile(req, res) {
+        try {
+            const { name, email, password, partner_name } = req.body;
+            const userId = req.decoded.id; 
+            const user = await User.findByPk(userId, { include: { model: Partner, as: 'partner' } });
+
+            if (!user) {
+                req.session.message = { type: 'error', text: 'User not found!' };
+                return res.redirect('/partner');
+            }
+
+            // Cek jika email diubah, pastikan email unik
+            if (email && email !== user.email) {
+                const emailExists = await User.findOne({ where: { email } });
+                if (emailExists) {
+                    req.session.message = { type: 'error', text: 'Email already in use!' };
+                    return res.redirect('/partner');
+                }
+                user.email = email;
+            }
+
+            // Update username jika diisi
+            if (name) user.name = name;
+
+            // Update password jika diisi
+            if (password) user.password = hashPassword(password);
+
+            // Update partner jika user punya partner
+            if (user.partner) {
+                if (partner_name) user.partner.nama_partner = partner_name;
+
+                // Cek jika ada file logo baru
+                if (req.file) {
+                    const oldLogoPath = `public/database/logo_partner/${user.partner.logo_partner}`;
+
+                    // Hapus file lama jika ada
+                    if (user.partner.logo_partner && fs.existsSync(oldLogoPath)) {
+                        fs.unlinkSync(oldLogoPath);
+                    }
+
+                    // Simpan file baru
+                    user.partner.logo_partner = req.file.filename;
+                }
+
+                await user.partner.save();
+            }
+
+            await user.save();
+
+            req.session.message = { type: 'success', text: 'Profile updated successfully!' };
+            res.redirect('/partner');
+        } catch (error) {
+            console.error(error);
+            req.session.message = { type: 'error', text: 'Failed to update profile!' };
+            res.redirect('/partner');
+        }
+    }
 }
 
 module.exports =  userController ;

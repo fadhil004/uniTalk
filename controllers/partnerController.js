@@ -25,11 +25,15 @@ class partnerController{
             user.partnerId = partner.id;
             await user.save();
 
-            res.status(201).json({
-                message: 'Partner registered successfully',
-                partner,
-                user
-            });
+            req.session.message = { type: 'success', text: `Regist as a partner success!` };
+
+            return res.redirect('/');
+
+            // res.status(201).json({
+            //     message: 'Partner registered successfully',
+            //     partner,
+            //     user
+            // });
         } catch (error) {
             res.status(500).json({ message: 'Error registering partner', error: error.message });
         }

@@ -1,4 +1,4 @@
-<% if (!user.partnerIds) { %>
+<% if (!user.partnerId) { %>
   <div class="modal-overlay"></div> <!-- Background blur -->
   
   <div id="partnerModal" class="modal-container">
@@ -76,7 +76,13 @@
           <div class="card-body">
             <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
             <h1 class="mb-4 ">Partner Status</h1>
+            <% if(user.status === 'accepted') { %>
             <h3 class="p-3 text-center font-weight-normal badge-success">Accepted</h3>
+            <% } else if(user.status === 'rejected') { %>
+              <h3 class="p-3 text-center font-weight-normal badge-danger">Rejected</h3>  
+            <% } else { %>
+              <h3 class="p-3 text-center font-weight-normal badge-warning">Pending</h3>
+            <% } %>
           </div>
         </div>
       </div>
@@ -86,7 +92,7 @@
             <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
             <h1 class=" mb-4">Joining Date   
             </h1>
-            <h3 class="font-weight-normal text-end">4 September 2002</h3>
+            <h3 class="font-weight-normal text-end"><%= user.joining_date %></h3>
           </div>
         </div>
       </div>
@@ -96,8 +102,8 @@
             <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
             <h1 class="mb-4">Total Interactions
             </h1>
-            <h3 class="font-weight-normal text-end">150 Chats</h3>
-            <h3 class="font-weight-normal text-end">25 Attachments</h3>
+            <h3 class="font-weight-normal text-end"><%= totalChats %> Chats</h3>
+            <h3 class="font-weight-normal text-end"><%= totalAttachments %> Attachments</h3>
           </div>
         </div>
       </div>

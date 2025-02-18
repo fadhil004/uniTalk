@@ -2,7 +2,7 @@
   <li class="nav-item nav-profile">
       <a href="#" class="nav-link">
           <div class="nav-profile-image">
-              <img src="/assets/images/faces-clipart/pic-1.png" alt="profile" />
+            <img src="<%= user && user.logo_partner ? '/database/logo_partner/' + user.logo_partner : '/assets/images/faces-clipart/pic-1.png' %>" alt="profile" />
               <span class="login-status online"></span>
           </div>
           <div class="nav-profile-text d-flex flex-column">
