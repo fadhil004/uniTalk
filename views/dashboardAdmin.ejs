@@ -46,3 +46,210 @@
         }
     });
   </script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">
+      <span class="page-title-icon bg-gradient-primary text-white me-2">
+        <i class="mdi mdi-home"></i>
+      </span> Dashboard Partner
+    </h3>
+  </div>
+  <div class="row">
+    <div class="col-md-4 stretch-card grid-margin">
+      <div class="card bg-gradient-info card-img-holder text-white">
+        <div class="card-body">
+          <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
+          <h1 class="mb-4 ">Total Partners</h1>
+            <h3 class="p-3 text-center badge-info"><%= totalPartners %> Partners</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 stretch-card grid-margin">
+      <div class="card bg-gradient-danger card-img-holder text-white">
+        <div class="card-body">
+          <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
+          <h1 class=" mb-4">Total Chats </h1>
+          <h3 class="p-3 text-center badge-danger"><%= totalChats %> Chats</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 stretch-card grid-margin">
+      <div class="card bg-gradient-success card-img-holder text-white">
+        <div class="card-body">
+          <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
+          <h1 class="mb-4">Total Attachments
+          </h1>
+          <h3 class="p-3 text-center badge-success"><%= totalAttachments %> Attachments</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Total Partner register by year</h4>
+          <select id="yearSelect" class="form-control text-center text-black" style="max-width: 80px;">
+            <% for (let year = new Date().getFullYear(); year >= 2020; year--) { %>
+              <option value="<%= year %>"><%= year %></option>
+            <% } %>
+          </select>
+          <canvas id="barChart" style="max-height:230px"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Partner Status</h4>
+            <div class="doughnutjs-wrapper d-flex justify-content-center">
+              <canvas id="doughnutChart" style="max-height: 230px;"></canvas>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Data Partners</h4>
+            </p>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th> User </th>
+                  <th> Partner Name </th>
+                  <th> Status </th>
+                  <th> Joining Date </th>
+                  <th> Action </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-1">
+                    <img src="../../assets/images/faces-clipart/pic-1.png" alt="image" />
+                  </td>
+                  <td> Herman Beck </td>
+                  <td class="pe-5">
+                    <div class="p-2 text-center font-weight-bold badge-success" >Accepted</div>
+                  </td>
+                  <td class="pe-5"> Februari 1, 2025 </td>
+                  <td >
+                    <button type="button" class="btn btn-gradient-info btn-rounded ">Detail</button> 
+                    <button type="button" class="btn btn-gradient-danger btn-rounded ">Delete</button> 
+                  </td>
+                </tr>
+                <% partners.forEach(partner => { %>
+                <tr>
+                  <td class="py-1">
+                    <img src="<%= partner.logo_partner ? '/database/logo_partner/' + partner.logo_partner : '/assets/images/faces-clipart/pic-1.png' %>" alt="image" />
+                  </td>
+                  <td><%= partner.nama_partner %></td>
+                  <td class="pe-5">
+                    <% if (partner.status === "accepted") { %>
+                        <div class="p-2 text-center font-weight-bold badge-success">Accepted</div>
+                    <% } else if (partner.status === "rejected") { %>
+                        <div class="p-2 text-center font-weight-bold badge-danger">Rejected</div>
+                    <% } else { %>
+                        <div class="p-2 text-center font-weight-bold badge-warning">Pending</div>
+                    <% } %>
+                  </td>
+                  <td class="pe-5"><%= new Date(partner.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) %></td>
+                  <td>
+                    <button type="button" class="btn btn-gradient-info btn-rounded ">Detail</button> 
+                    <button type="button" class="btn btn-gradient-danger btn-rounded ">Delete</button>
+                  </td>
+                </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const barCtx = document.getElementById("barChart")?.getContext("2d");
+    const doughnutCtx = document.getElementById("doughnutChart")?.getContext("2d");
+    const yearSelect = document.getElementById("yearSelect");
+
+    let barChart, doughnutChart;
+
+    async function fetchDashboardData(year) {
+        try {
+            const response = await fetch(`/api/dashboard-data?year=${year}`);
+            const data = await response.json();
+            console.log("Data dari API:", data); // Cek apakah data diterima
+
+            updateBarChart(data.totalPartnersByMonth);
+            updateDoughnutChart(data.partnerStatus);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }
+
+    function updateBarChart(data) {
+        if (!barCtx) return console.error("Canvas 'barChart' tidak ditemukan!");
+
+        if (barChart) barChart.destroy();
+
+        barChart = new Chart(barCtx, {
+            type: "bar",
+            data: {
+                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                datasets: [{
+                    label: "Total Partners",
+                    backgroundColor: "#4CAF50",
+                    borderColor: "#388E3C",
+                    data: data
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function updateDoughnutChart(data) {
+        if (!doughnutCtx) return console.error("Canvas 'doughnutChart' tidak ditemukan!");
+
+        if (doughnutChart) doughnutChart.destroy();
+
+        doughnutChart = new Chart(doughnutCtx, {
+            type: "doughnut",
+            data: {
+                labels: ["Accepted", "Rejected", "Pending"],
+                datasets: [{
+                    data: [data.accepted, data.rejected, data.pending],
+                    backgroundColor: ["#4CAF50", "#f44336", "#FFEB3B"]
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    }
+
+    if (yearSelect) {
+        yearSelect.addEventListener("change", function () {
+            fetchDashboardData(this.value);
+        });
+
+        // Load data awal berdasarkan tahun sekarang
+        fetchDashboardData(yearSelect.value || new Date().getFullYear());
+    } else {
+        // Jika dropdown tidak ada, tetap load data dengan tahun saat ini
+        fetchDashboardData(new Date().getFullYear());
+    }
+});
+
+</script>

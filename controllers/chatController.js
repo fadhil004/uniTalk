@@ -5,8 +5,13 @@ const { Sequelize} = sequelize;
 class chatController{
     static async sendMessage(req, res) {
         try {
-            const { partnerId, id_sender, id_receiver, id_reference, pesan, attachment } = req.body;
-    
+            const { partnerId, id_sender, id_receiver, id_reference, pesan } = req.body;
+            const attachment = req.uploadedFileName ? `/database/attachments/${req.uploadedFileName}` : null;
+
+            if (!pesan && !attachment) {
+                return res.status(400).json({ message: 'Message or attachment is required!' });
+            }
+
             const chat = await Chat.create({
                 partnerId,
                 id_sender,
@@ -15,7 +20,7 @@ class chatController{
                 pesan,
                 attachment,
             });
-    
+
             res.status(201).json({
                 message: 'Message sent successfully',
                 chat,

@@ -36,5 +36,7 @@ router.get('/chat', authentication, authorization, dashboardController.chat)
 router.get('/help-center', authentication, authorization, dashboardController.helpCenter)
 router.get('/admin', authentication, authorizeAdmin, dashboardController.dashboardAdmin)
 router.get('/partnersData', authentication, authorizeAdmin, dashboardController.partnersData)
+router.get('/approval', authentication, authorizeAdmin, dashboardController.approval)
+router.get('/api/dashboard-data', authentication, authorizeAdmin, dashboardController.dashboardAdminData)
 
 module.exports = router

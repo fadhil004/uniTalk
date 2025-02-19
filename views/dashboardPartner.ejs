@@ -77,11 +77,11 @@
             <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
             <h1 class="mb-4 ">Partner Status</h1>
             <% if(user.status === 'accepted') { %>
-            <h3 class="p-3 text-center font-weight-normal badge-success">Accepted</h3>
+            <h3 class="p-3 text-center badge-success">Accepted</h3>
             <% } else if(user.status === 'rejected') { %>
-              <h3 class="p-3 text-center font-weight-normal badge-danger">Rejected</h3>  
+              <h3 class="p-3 text-center badge-danger">Rejected</h3>  
             <% } else { %>
-              <h3 class="p-3 text-center font-weight-normal badge-warning">Pending</h3>
+              <h3 class="p-3 text-center badge-warning">Pending</h3>
             <% } %>
           </div>
         </div>
@@ -92,7 +92,7 @@
             <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
             <h1 class=" mb-4">Joining Date   
             </h1>
-            <h3 class="font-weight-normal text-end"><%= user.joining_date %></h3>
+            <h3 class="p-3 badge-danger text-center"><%= user.joining_date %></h3>
           </div>
         </div>
       </div>
@@ -102,21 +102,26 @@
             <img src="assets/images/dashboard/circle.svg" class="card-img-absolute" alt="circle-image" />
             <h1 class="mb-4">Total Interactions
             </h1>
-            <h3 class="font-weight-normal text-end"><%= totalChats %> Chats</h3>
-            <h3 class="font-weight-normal text-end"><%= totalAttachments %> Attachments</h3>
+            <h3 class="badge-success px-3"><%= totalChats %> Chats</h3>
+            <h3 class="badge-success px-3"><%= totalAttachments %> Attachments</h3>
           </div>
         </div>
       </div>
     </div>
     <div class="row">
-      <div class="col-md-12 grid-margin stretch-card">
+      <div class="col-lg-6 grid-margin stretch-card">
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">Chat Statistics Per Month</h4>
-            <select id="yearFilter" class="form-control w-25 mb-3">
-              <!-- Fill by JS -->
-            </select>
-            <canvas id="chatBarChart" style="max-height: 400px;"></canvas>
+            <h4 class="card-title">Total Private Chat</h4>
+            <canvas id="privateChatChart" style="max-height:230px"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Total Group Chat</h4>
+            <canvas id="groupChatChart" style="max-height:230px"></canvas>
           </div>
         </div>
       </div>
@@ -134,20 +139,11 @@
           <div class="card-body">
             <h4 class="card-title">Recent Attachments</h4>
             <div class="row mt-3">
-              <div class="col-6 pe-1">
-                <img src="assets/images/dashboard/img_1.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-                <img src="assets/images/dashboard/img_4.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
+              <% recentAttachments.forEach((attachment) => { %>
+              <div class="col-6 p-1">
+                <img src="<%= attachment.url %>" class="mb-2 mw-100 w-100 rounded" alt="image">
               </div>
-              <div class="col-6 ps-1">
-                <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-                <img src="assets/images/dashboard/img_3.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-              </div>
-              <div class="col-6 pe-1">
-                <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-              </div>
-              <div class="col-6 ps-1">
-                <img src="assets/images/dashboard/img_2.jpg" class="mb-2 mw-100 w-100 rounded" alt="image">
-              </div>
+              <% }); %>
             </div>
           </div>
         </div>
@@ -157,76 +153,65 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const ctx = document.getElementById("chatBarChart").getContext("2d");
-      let chatChart;
-
-      // **Isi dropdown tahun secara otomatis**
-      const yearFilter = document.getElementById("yearFilter");
+      const privateCtx = document.getElementById("privateChatChart").getContext("2d");
+      const groupCtx = document.getElementById("groupChatChart").getContext("2d");
+    
+      function updateCharts(year) {
+        fetch(`/api/chats/chat-statistics?year=${year}`)
+          .then(response => response.json())
+          .then(data => {
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const privateChats = Array(12).fill(0);
+            const groupChats = Array(12).fill(0);
+    
+            data.forEach(item => {
+              const monthIndex = item.month - 1;
+              privateChats[monthIndex] = item.totalPrivateChat || 0;
+              groupChats[monthIndex] = item.totalGroupChat || 0;
+            });
+    
+            new Chart(privateCtx, {
+              type: "bar",
+              data: {
+                labels: months,
+                datasets: [{
+                  label: "Private Chat",
+                  backgroundColor: "#4CAF50",
+                  borderColor: "#388E3C",
+                  borderWidth: 1,
+                  data: privateChats
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+              }
+            });
+    
+            new Chart(groupCtx, {
+              type: "bar",
+              data: {
+                labels: months,
+                datasets: [{
+                  label: "Group Chat",
+                  backgroundColor: "#f44336",
+                  borderColor: "#D32F2F",
+                  borderWidth: 1,
+                  data: groupChats
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+              }
+            });
+          })
+          .catch(error => console.error("Error fetching data:", error));
+      }
+    
       const currentYear = new Date().getFullYear();
-      for (let i = currentYear; i >= currentYear - 5; i--) {
-          let option = new Option(i, i);
-          yearFilter.appendChild(option);
-      }
-
-      function updateChart(year) {
-          fetch(`/api/chats/chat-statistics?year=${year}`)
-              .then(response => response.json())
-              .then(data => {
-                  const privateChats = Array(12).fill(0);
-                  const groupChats = Array(12).fill(0);
-
-                  data.forEach(item => {
-                      const monthIndex = item.month - 1;
-                      privateChats[monthIndex] = item.totalPrivateChat || 0;
-                      groupChats[monthIndex] = item.totalGroupChat || 0;
-                  });
-
-                  if (chatChart) {
-                      chatChart.destroy();
-                  }
-
-                  chatChart = new Chart(ctx, {
-                      type: "bar",
-                      data: {
-                          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                          datasets: [
-                              {
-                                  label: "Private Chat",
-                                  backgroundColor: "#4CAF50",
-                                  borderColor: "#388E3C",
-                                  borderWidth: 1,
-                                  data: privateChats,
-                              },
-                              {
-                                  label: "Group Chat",
-                                  backgroundColor: "#f44336",
-                                  borderColor: "#D32F2F",
-                                  borderWidth: 1,
-                                  data: groupChats,
-                              },
-                          ],
-                      },
-                      options: {
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          scales: {
-                              y: {
-                                  beginAtZero: true,
-                              },
-                          },
-                      },
-                  });
-              })
-              .catch(error => console.error("Error fetching data:", error));
-      }
-
-      // **Tampilkan data tahun sekarang saat pertama kali load**
-      updateChart(currentYear);
-
-      // **Event Listener untuk Filter Tahun**
-      document.getElementById("yearFilter").addEventListener("change", function () {
-          updateChart(this.value);
-      });
-  });
-
-  </script>
+      updateCharts(currentYear);
+    });
+    </script>
