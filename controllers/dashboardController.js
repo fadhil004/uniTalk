@@ -1,5 +1,5 @@
 const { Op, Sequelize } = require('sequelize') 
-const { Chat, Partner, sequelize } = require('../models');
+const { Chat, Partner, User, sequelize } = require('../models');
 
 class dashboardController {
     static async dashboardPartner(req, res) {
@@ -95,9 +95,16 @@ class dashboardController {
             const totalPartners = await Partner.count();
 
             const partners = await Partner.findAll({
-                attributes: ["id", "nama_partner", "status", "createdAt", "logo_partner"], // Pastikan kolom sesuai dengan database
+                attributes: ["id", "nama_partner", "status", "createdAt", "logo_partner"],
                 order: [["createdAt", "DESC"]],
-                limit: 5
+                limit: 5,
+                include: [
+                    {
+                        model: User,
+                        as: "user",
+                        attributes: ["name", "email"], 
+                    }
+                ]
             });
 
             res.render('dashboardAdmin', { 
@@ -116,15 +123,44 @@ class dashboardController {
     }
     static async partnersData(req, res) {
         try {
+            // Ambil halaman dari query params (default: 1)
+            let page = parseInt(req.query.page) || 1;
+            let limit = 10; // Maksimum data per halaman
+            let offset = (page - 1) * limit; // Hitung offset untuk query
+    
+            // Ambil total jumlah partners untuk pagination
+            const totalPartners = await Partner.count();
+    
+            // Query data berdasarkan pagination
+            const partners = await Partner.findAll({
+                attributes: ["id", "nama_partner", "status", "createdAt", "logo_partner"],
+                order: [["createdAt", "DESC"]],
+                limit: limit,
+                offset: offset,
+                include: [
+                    {
+                        model: User,
+                        as: "user",
+                        attributes: ["name", "email"], 
+                    }
+                ]
+            });
+    
+            // Hitung total halaman
+            let totalPages = Math.ceil(totalPartners / limit);
+    
             res.render('partnersData', { 
                 user: req.user, 
-                cache: false 
+                cache: false,
+                partners,
+                currentPage: page, 
+                totalPages: totalPages 
             });
         } catch (err) {
             console.error('Error rendering partners data:', err);
             res.status(500).send(err.message);
         }
-    }
+    }    
     static async approval(req, res){
         try{
             res.render('approval', {
