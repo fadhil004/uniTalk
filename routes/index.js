@@ -12,6 +12,7 @@ const { authorizeAdmin, authorizePartner, authorization } = require('../middlewa
 router.post('/partners/register', authentication, uploadSingle('logo_partner'), partnerController.registerPartner); 
 router.get('/partners', authentication, authorizeAdmin, partnerController.getAllPartners); 
 router.delete('/partners/:id', authentication, authorizeAdmin, partnerController.deletePartner);
+router.post('/partners/update-status/:id', authentication, authorizeAdmin, partnerController.updatePartnerStatus);
 
 //chatController
 router.get('/chats', authentication, authorizePartner, chatController.getPartnerChats)

@@ -163,10 +163,40 @@ class dashboardController {
     }    
     static async approval(req, res){
         try{
-            res.render('approval', {
-                user: req.user,
-                cache: false
-            })
+            // Ambil halaman dari query params (default: 1)
+            let page = parseInt(req.query.page) || 1;
+            let limit = 10; // Maksimum data per halaman
+            let offset = (page - 1) * limit; // Hitung offset untuk query
+    
+            // Ambil total jumlah partners untuk pagination
+            const totalPartners = await Partner.count();
+    
+            // Query data berdasarkan pagination
+            const partners = await Partner.findAll({
+                attributes: ["id", "nama_partner", "status", "createdAt", "logo_partner"],
+                order: [["createdAt", "DESC"]],
+                limit: limit,
+                offset: offset,
+                where: { status: "pending" },
+                include: [
+                    {
+                        model: User,
+                        as: "user",
+                        attributes: ["name", "email"], 
+                    }
+                ]
+            });
+    
+            // Hitung total halaman
+            let totalPages = Math.ceil(totalPartners / limit);
+    
+            res.render('approval', { 
+                user: req.user, 
+                cache: false,
+                partners,
+                currentPage: page, 
+                totalPages: totalPages 
+            });
         } catch (err) {
             console.error('Error rendering approval:', err);
             res.status(500).send(err.message);

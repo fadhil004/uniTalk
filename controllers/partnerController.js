@@ -62,7 +62,31 @@ class partnerController{
             res.status(500).json({ message: 'Error deleting partner', error: error.message });
         }
     };
-
+    static async updatePartnerStatus(req, res) {
+        try {
+            const { status } = req.body;
+            const { id } = req.params;
+    
+            // Validasi input status
+            if (!["accepted", "rejected"].includes(status)) {
+                return res.status(400).json({ success: false, message: "Invalid status" });
+            }
+    
+            // Update status di database
+            const partner = await Partner.findByPk(id);
+            if (!partner) {
+                return res.status(404).json({ success: false, message: "Partner not found" });
+            }
+    
+            partner.status = status;
+            await partner.save();
+    
+            return res.json({ success: true, message: "Status updated successfully" });
+        } catch (err) {
+            console.error("Error updating status:", err);
+            res.status(500).json({ success: false, message: "Server error" });
+        }
+    }    
 }
 
 module.exports = partnerController
