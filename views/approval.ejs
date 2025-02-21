@@ -172,17 +172,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Ubah status di tampilan tanpa reload
-                        const statusDiv = document.querySelector(`button[data-id='${selectedPartnerId}']`)
-                            .closest("tr")
-                            .querySelector(".pe-5 div");
-
-                        statusDiv.className = `p-2 text-center font-weight-bold badge-${selectedStatus === "accepted" ? "success" : "danger"}`;
-                        statusDiv.innerText = selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
-
-                        // Tutup modal
-                        const confirmModal = bootstrap.Modal.getInstance(document.getElementById("confirmStatusModal"));
-                        confirmModal.hide();
+                        location.reload();
                     } else {
                         alert("Failed to update status. Please try again.");
                     }

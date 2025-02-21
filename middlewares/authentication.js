@@ -1,6 +1,5 @@
 const jwt = require('../helpers/jwt');
 const { User, Partner } = require('../models');
-const moment = require('moment');
 
 const authentication = async (req, res, next) => {
     try {

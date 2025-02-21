@@ -40,4 +40,7 @@ router.get('/partnersData', authentication, authorizeAdmin, dashboardController.
 router.get('/approval', authentication, authorizeAdmin, dashboardController.approval)
 router.get('/api/dashboard-data', authentication, authorizeAdmin, dashboardController.dashboardAdminData)
 
+//testing
+router.get('/test', dashboardController.test);
+
 module.exports = router

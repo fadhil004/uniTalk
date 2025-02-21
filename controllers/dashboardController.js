@@ -255,6 +255,14 @@ class dashboardController {
             res.status(500).json({ error: "Internal Server Error" });
         }
     }
+    static async test(req, res){
+        try {
+            res.render('test', {layout: false})
+        } catch (err) {
+            console.error("Error bre");
+            res.status(500).json({ error: err})
+        }
+    }
 }
 
 module.exports = dashboardController;

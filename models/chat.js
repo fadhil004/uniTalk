@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     }, 
     pesan: {
       type: DataTypes.TEXT,
-      allowNull: false
+      allowNull: true
     },
     attachment:{
       type: DataTypes.STRING,

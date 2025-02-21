@@ -1,3 +1,4 @@
+const http = require('http');
 const express = require('express');
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
@@ -7,7 +8,11 @@ const { sequelize } = require('./models');
 const session = require('express-session');
 const setUser = require('./middlewares/setUser');
 
+const WebSocket = require('ws');
 const app = express();
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
 console.log("🚀 Server starting...");;
 
@@ -45,7 +50,6 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', err);
     });
 
-
 app.use(session({
     secret: 'kunci-inggris', 
     resave: false,
@@ -59,8 +63,28 @@ app.use('/', require('./routes/index'));
 app.use('/api/chats', require('./routes/chatRoutes'));
 
 
+// Websocket server
+wss.on("connection", (ws) => {
+    console.log("Client connected");
+
+    ws.on("message", (message) => {
+        const data = JSON.parse(message);
+        console.log("Received:", data);
+
+        if (data.type === "sendMessage") {
+            wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({ type: "newMessage", pesan: data.pesan }));
+                }
+            });
+        }
+    });
+
+    ws.on("close", () => console.log("Client disconnected"));
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
