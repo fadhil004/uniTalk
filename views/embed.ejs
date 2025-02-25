@@ -25,6 +25,10 @@
         }
 
         .chat-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
             background: #007bff;
             color: white;
             padding: 15px;
@@ -34,22 +38,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 1000;
         }
 
         .chat-main {
             display: flex;
             flex: 1;
-            overflow: hidden;
         }
 
         .chat-list {
+            position: fixed;
+            top: 57px;
+            left: 0;
             width: 90px;
+            height: calc(100% - 133px);
             background: #343a40;
             padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            overflow-y: auto;
         }
 
         .chat-list button {
@@ -61,12 +70,16 @@
         }
 
         .chat-box {
+            margin-top: 57px;
+            margin-left: 90px;
+            margin-bottom: 60px;
             flex: 1;
             padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            height: calc(100% - 133px);
         }
 
         .message {
@@ -90,6 +103,10 @@
         }
 
         .chat-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             display: flex;
             padding: 15px;
             border-top: 1px solid #ccc;
@@ -149,12 +166,14 @@
             </div>
         </div>
 
-        <div class="chat-footer">
-            <input type="file" id="attachmentInput" style="display: none;">
-            <button id="attachButton"><i class="fa fa-paperclip"></i></button>
-            <input type="text" id="messageInput" placeholder="Ketik pesan...">
-            <button id="sendButton">Kirim</button>
-        </div>        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="chat-footer">
+                <input type="file" id="attachmentInput" name="attachment" style="display: none;">
+                <button type="button" id="attachButton"><i class="fa fa-paperclip"></i></button>
+                <input type="text" id="messageInput" placeholder="Ketik pesan...">
+                <button type="submit" id="sendButton">Kirim</button>
+            </div>
+        </form>
     </div>
 
     <script>
@@ -185,7 +204,16 @@
                         // Menampilkan setiap pesan dalam urutan kronologis
                         data.chats.forEach(chat => {
                             const senderType = chat.id_sender === id_sender ? 'user' : 'other';
-                            addMessage(chat.pesan, senderType);
+                            if (chat.pesan !== null) {
+                                addMessage(chat.pesan, senderType);
+                            } else if (chat.attachment) {
+                                const linkElement = document.createElement('img');
+                                linkElement.src = `/database/attachments/${chat.attachment}`;
+                                linkElement.target = '_blank';
+                                linkElement.style = 'max-width:150px;max-height:150px;color:black; text-decoration:none;'
+
+                                addMessage(linkElement, senderType);
+                            }
                         });
                     } else {
                         chatBox.innerHTML = `<p class="message other">Gagal memuat obrolan dengan ${chatId}</p>`;
@@ -220,7 +248,12 @@
             const chatBox = document.getElementById("chatBox");
             const messageElement = document.createElement("p");
             messageElement.classList.add("message", sender);
-            messageElement.textContent = pesan;
+
+            if (typeof pesan === 'string') {
+                messageElement.textContent = pesan;
+            } else {
+                messageElement.appendChild(pesan);
+            }
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -266,24 +299,78 @@
             document.getElementById("attachmentInput").click();
         });
 
-        document.getElementById("attachmentInput").addEventListener("change", (event) => {
-            const file = event.target.files[0];
+        // Ketika form di-submit, unggah file
+        document.getElementById('uploadForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const attachmentInput = document.getElementById('attachmentInput');
+            const messageInput = document.getElementById('messageInput');
+            const file = attachmentInput.files[0];
+            const pesan = messageInput.value.trim();
 
             if (file && selectedChatId) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const fileData = reader.result;
-                    socket.send(JSON.stringify({ 
-                        type: "sendFile", 
-                        fileName: file.name,
-                        fileData,
-                        id_sender: currentUserId,
-                        id_receiver: selectedChatId
-                    }));
+                const formData = new FormData();
+                formData.append('attachment', file);
+                formData.append('api_key', api_key);
+                formData.append('id_sender', id_sender);
+                formData.append('id_receiver', selectedChatId);
 
-                    addMessage(`📎 ${file.name}`, "user");
-                };
-                reader.readAsDataURL(file);
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'File uploaded successfully') {
+                    // Tampilkan lampiran di area chat
+                    const linkElement = document.createElement('img');
+                    linkElement.src = `/database/attachments/${data.data.attachment}`;
+                    linkElement.target = '_blank';
+                    linkElement.style = 'max-width:150px;max-height:150px;color:black'
+                    linkElement.textContent = '📎 ',data.data.attachment;
+                    addMessage(linkElement, 'user');
+                } else {
+                    const linkElement = document.createElement('img');
+                    linkElement.src = `/database/attachments/${data.data.attachment}`;
+                    linkElement.target = '_blank';
+                    linkElement.style = 'max-width:150px;max-height:150px;color:black'
+                    linkElement.textContent = '📎 ' + data.data.attachment;
+                    addMessage(linkElement, 'user');
+                    console.error('Error uploading file:', data.error);
+                }
+                })
+                .catch(error => {
+                    console.error('Error uploading file:', error);
+                });
+            }
+
+            if (pesan && selectedChatId) {
+                // Kirim pesan teks melalui Socket.IO
+                socket.emit('sendMessage', {
+                    api_key,
+                    id_sender,
+                    id_receiver: selectedChatId,
+                    pesan
+                });
+
+                addMessage(pesan, 'user');
+                messageInput.value = '';
+            }
+
+            // Reset input file
+            attachmentInput.value = '';
+        });
+
+        socket.on('newAttachment', (data) => {
+            if (data.id_sender === selectedChatId || data.id_receiver === selectedChatId) {
+                const senderType = data.id_sender === id_sender ? 'user' : 'other';
+                console.log("hit api newAttachment2")
+                const linkElement = document.createElement('img');
+                    linkElement.src = `/database/attachments/${data.attachment}`;
+                    linkElement.target = '_blank';
+                    linkElement.style = 'max-width:150px;max-height:150px;color:black'
+                    linkElement.textContent = '📎 '+ data.attachment;
+                    addMessage(linkElement, 'other');
             }
         });
 

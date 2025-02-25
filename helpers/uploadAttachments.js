@@ -1,31 +1,42 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Konfigurasi penyimpanan
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/database/attachments/');
+        const uploadPath = 'public/database/attachments/';
+        cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
+        const fileName = Date.now() + path.extname(file.originalname);
+        req.uploadedFileName = fileName; // Simpan nama file yang diupload di req
+        cb(null, fileName);
     }
 });
 
-// Filter jenis file yang diperbolehkan
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword'];
-    if (allowedTypes.includes(file.mimetype)) {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/jpg') {
         cb(null, true);
     } else {
-        cb(new Error('Jenis file tidak didukung'), false);
+        cb(new Error('Invalid file type, only JPEG, PNG, and JPG are allowed!'), false);
     }
 };
 
-// Inisialisasi upload dengan batasan ukuran file
 const upload = multer({
     storage: storage,
-    fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // Maksimum 5MB
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+    fileFilter: fileFilter
 });
 
-module.exports = upload;
+module.exports = {
+    uploadSingle: (fieldName) => (req, res, next) => {
+        const uploadFile = upload.single(fieldName);
+
+        uploadFile(req, res, (err) => {
+            if (err) {
+                return res.status(400).json({ error: err.message });
+            }
+            next();
+        });
+    }
+};

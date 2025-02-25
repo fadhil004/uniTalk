@@ -8,7 +8,7 @@ const chatController = require('../controllers/chatController');
 const { authentication } = require('../middlewares/authentication');
 const { authorizePartner, authorizeAdmin } = require('../middlewares/authorization');
 
-router.post('/send', upload.single('attachments'), chatController.sendMessage);
+router.post('/send', chatController.sendMessage);
 router.put('/:id', authentication, authorizePartner, chatController.editChat);
 router.get('/chat-statistics', authentication, authorizePartner, chatController.getChatStatistics);
 

@@ -11,6 +11,7 @@ const session = require('express-session');
 const setUser = require('./middlewares/setUser');
 
 const { Chat, Partner } = require('./models');
+const { uploadSingle } = require('./helpers/uploadAttachments');
 
 const app = express();
 const server = http.createServer(app);
@@ -42,6 +43,7 @@ app.set('layout', 'layouts/main');
 
 // Middleware for serving static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use((req, res, next) => {
     res.locals.currentUrl = req.originalUrl;
     next();
@@ -79,7 +81,7 @@ io.on('connection', async (socket) => {
 
     // Menerima dan memproses pesan dari klien
     socket.on('sendMessage', async (data) => {
-        const { api_key, id_sender, id_receiver, pesan, id_reference, attachment } = data;
+        const { api_key, id_sender, id_receiver, pesan, id_reference } = data;
         const receiverSocketId = users[id_receiver];
 
         // Validasi API Key
@@ -96,7 +98,6 @@ io.on('connection', async (socket) => {
             id_receiver,
             pesan,
             id_reference,
-            attachment,
             edited: false
         });
 
@@ -108,12 +109,47 @@ io.on('connection', async (socket) => {
         }
     });
 
+    //upload attachments
+    app.post('/upload', uploadSingle('attachment'), async (req,res) =>{
+        try {    
+            const { api_key, id_sender, id_receiver } = req.body;
+            if(!req.file) {
+                return res.status(400).send('No file uploaded!');
+            }
+
+            // Validasi API Key
+            const partner = await Partner.findOne({ where: { api_key } });
+            if (!partner) {
+                socket.emit('auth_error', 'Invalid API Key');
+                return;
+            }
+
+            const newAttachment = await Chat.create({
+                partnerId: partner.id,
+                id_sender,
+                id_receiver,
+                attachment: req.file.filename,
+                edited: false
+            });
+            const receiverSocketId = users[id_receiver];
+            if(receiverSocketId) {
+                io.to(receiverSocketId).emit('newAttachment', newAttachment);
+            } else{
+                console.log("gaada brok")
+            }
+            res.status(200).json({ message: 'File uploaded succsefully', data: newAttachment });
+        } catch (error) {
+            res.status(400).json({message: 'error uploading file!', error: error.message});
+        }
+    })
+
     // Menangani disconnect
     socket.on('disconnect', () => {
         console.log("User disconnected:", socket.id);
         delete users[id_sender];
     });
 });
+
 
 // Start Server
 const PORT = process.env.PORT || 5000;
