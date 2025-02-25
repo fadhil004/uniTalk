@@ -149,6 +149,54 @@
             display: none;
         }
 
+        /* Gaya untuk Pop-up Formulir */
+        .popup-form {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .popup-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .popup-content label {
+            margin-top: 10px;
+        }
+
+        .popup-content input {
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .popup-content button {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -168,12 +216,27 @@
 
         <form id="uploadForm" enctype="multipart/form-data">
             <div class="chat-footer">
+                <button type="button" id="addChatButton" class="add-chat-button"><i class="fa fa-plus"></i></button>
                 <input type="file" id="attachmentInput" name="attachment" style="display: none;">
                 <button type="button" id="attachButton"><i class="fa fa-paperclip"></i></button>
                 <input type="text" id="messageInput" placeholder="Ketik pesan...">
                 <button type="submit" id="sendButton">Kirim</button>
             </div>
         </form>
+    </div>
+
+    <div class="popup-form" id="popupForm">
+        <div class="popup-content">
+            <span class="close-button" id="closePopupButton">&times;</span>
+            <h2>Buat Chat Baru</h2>
+            <form id="newChatForm">
+                <label for="receiverId">ID Receiver:</label>
+                <input type="text" id="receiverId" name="receiverId">
+                <label for="groupId">ID Group:</label>
+                <input type="text" id="groupId" name="groupId">
+                <button type="submit">Simpan</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -225,25 +288,6 @@
                 });    
         }
 
-        function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const pesan = messageInput.value.trim();
-
-            if (pesan && selectedChatId) {
-                socket.emit('sendMessage', {
-                    api_key,
-                    id_sender,
-                    id_receiver: selectedChatId,
-                    pesan
-                });
-
-                addMessage(pesan, 'user');
-                messageInput.value = '';
-            }
-        }
-
-        document.getElementById('sendButton').addEventListener('click', sendMessage);
-
         function addMessage(pesan, sender) {
             const chatBox = document.getElementById("chatBox");
             const messageElement = document.createElement("p");
@@ -280,17 +324,17 @@
                 const chatList = document.getElementById("chatList");
                 chatList.innerHTML = "";
 
-                const addedReceivers = new Set();
+                const addedUsers = new Set();
                 data.chats.forEach(chat => {
-                    if (chat.id_receiver === id_sender || addedReceivers.has(chat.id_receiver)) {
-                        return;
-                    }
-                    addedReceivers.add(chat.id_receiver);
+                    const otherUserId = chat.id_sender === id_sender ? chat.id_receiver : chat.id_sender;
+                    if (!addedUsers.has(otherUserId)) {
+                        addedUsers.add(otherUserId);
 
-                    const button = document.createElement("button");
-                    button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${chat.id_receiver} </span></i>`;
-                    button.onclick = () => selectChat(chat.id_receiver);
-                    chatList.appendChild(button);
+                        const button = document.createElement("button");
+                        button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${otherUserId}</span></i>`;
+                        button.onclick = () => selectChat(otherUserId);
+                        chatList.appendChild(button);
+                    }
                 });    
             })
 
@@ -342,6 +386,8 @@
                 .catch(error => {
                     console.error('Error uploading file:', error);
                 });
+                messageInput.placeholder = 'Ketik pesan...';
+                messageInput.disabled = false;
             }
 
             if (pesan && selectedChatId) {
@@ -372,6 +418,65 @@
                     linkElement.textContent = '📎 '+ data.attachment;
                     addMessage(linkElement, 'other');
             }
+        });
+
+        document.getElementById('attachmentInput').addEventListener('change', function(event) {
+            const messageInput = document.getElementById('messageInput');
+            if (event.target.files.length > 0) {
+                const fileName = event.target.files[0].name;
+                messageInput.placeholder = '📎 '+ fileName;
+                messageInput.disabled = true; // Menonaktifkan input pesan
+            } else {
+                messageInput.value = '';
+                messageInput.disabled = false; // Mengaktifkan kembali jika tidak ada file
+            }
+        });
+//test
+        document.addEventListener('DOMContentLoaded', function () {
+            const addChatButton = document.getElementById('addChatButton');
+            const popupForm = document.getElementById('popupForm');
+            const closePopupButton = document.getElementById('closePopupButton');
+            const newChatForm = document.getElementById('newChatForm');
+            const receiverIdInput = document.getElementById('receiverId');
+            const groupIdInput = document.getElementById('groupId');
+            const chatList = document.getElementById('chatList');
+
+            // Fungsi untuk membuka pop-up
+            addChatButton.addEventListener('click', function () {
+                popupForm.style.display = 'block';
+            });
+
+            // Fungsi untuk menutup pop-up
+            closePopupButton.addEventListener('click', function () {
+                popupForm.style.display = 'none';
+            });
+
+            // Fungsi untuk menambahkan chat baru ke daftar chat
+            newChatForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const receiverId = receiverIdInput.value.trim();
+                const groupId = groupIdInput.value.trim();
+
+                // Validasi input: hanya salah satu field yang boleh diisi
+                if ((receiverId && groupId) || (!receiverId && !groupId)) {
+                    alert('Harap isi salah satu field saja.');
+                    return;
+                }
+
+                // Tentukan ID yang akan digunakan
+                const chatId = receiverId || groupId;
+
+                // Tambahkan tombol chat baru ke daftar chat
+                const button = document.createElement('button');
+                button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${chatId}</span></i>`;
+                button.onclick = () => selectChat(chatId);
+                chatList.appendChild(button);
+
+                // Reset form dan tutup pop-up
+                receiverIdInput.value = '';
+                groupIdInput.value = '';
+                popupForm.style.display = 'none';
+            });
         });
 
     </script>

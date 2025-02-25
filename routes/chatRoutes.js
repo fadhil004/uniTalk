@@ -42,9 +42,8 @@ router.get('/get-chats', async (req, res) => {
             where: {
                 partnerId: partner.id,
                 [Op.or]: [
-                    { id_sender },
-                    { id_receiver: id_sender },
-                    { id_reference: id_sender }
+                    { id_sender: id_sender },
+                    { id_receiver: id_sender }
                 ]
             },
             order: [['createdAt', 'ASC']]
