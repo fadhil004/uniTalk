@@ -12,39 +12,36 @@ module.exports = (server) => {
     });
 
     io.on("connection", async (socket) => {
-        console.log("User connected:", socket.id);
+        const { api_key, id_sender } = socket.handshake.query;
 
         // Validasi API Key
-        socket.on("authenticate", async ({ api_key }) => {
-            const partner = await Partner.findOne({ where: { api_key } });
-            if (!partner) {
-                socket.emit("auth_error", "Invalid API Key");
-                socket.disconnect();
-                return;
-            }
+        const partner = await Partner.findOne({ where: { api_key } });
+        if (!partner) {
+            socket.emit("auth_error", "Invalid API Key");
+            socket.disconnect();
+            return;
+        }
 
-            socket.partnerId = partner.id;
-            socket.emit("auth_success", "Authenticated successfully");
-        });
+        socket.partnerId = partner.id;
+        socket.id_sender = id_sender;
 
-        // Bergabung ke room chat
-        socket.on("joinRoom", (room) => {
-            socket.join(room);
-            console.log(`User ${socket.id} joined room: ${room}`);
-        });
+        socket.emit("auth_success", "Authenticated successfully");
+
+        // Bergabung ke room berdasarkan partnerId
+        socket.join(socket.partnerId);
 
         // Menerima pesan dari user
         socket.on("sendMessage", async (data) => {
-            const { id_sender, id_receiver, id_reference, pesan, attachment } = data;
+            const { id_receiver, id_reference, pesan, attachment } = data;
 
-            if (!socket.partnerId) {
-                socket.emit("error", "Unauthorized");
+            if (!pesan && !attachment) {
+                socket.emit("error", "Message or attachment is required!");
                 return;
             }
 
             const newMessage = await Chat.create({
                 partnerId: socket.partnerId,
-                id_sender,
+                id_sender: socket.id_sender,
                 id_receiver,
                 id_reference,
                 pesan,
@@ -52,8 +49,9 @@ module.exports = (server) => {
                 edited: false
             });
 
+            // Emit pesan baru ke room yang sesuai
             io.to(id_receiver || socket.partnerId).emit("newMessage", newMessage);
-        });
+        }); 
 
         socket.on("disconnect", () => {
             console.log("User disconnected:", socket.id);

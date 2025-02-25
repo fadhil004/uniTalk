@@ -1,4 +1,6 @@
 const http = require('http');
+const { Server } = require('socket.io')
+
 const express = require('express');
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
@@ -8,11 +10,15 @@ const { sequelize } = require('./models');
 const session = require('express-session');
 const setUser = require('./middlewares/setUser');
 
-const WebSocket = require('ws');
-const app = express();
+const { Chat, Partner } = require('./models');
 
+const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const io = new Server(server,{
+    cors: {
+        origin: "*",
+    }
+});
 
 console.log("🚀 Server starting...");;
 
@@ -62,25 +68,51 @@ app.use(setUser);
 app.use('/', require('./routes/index'));
 app.use('/api/chats', require('./routes/chatRoutes'));
 
+const users = {};
 
-// Websocket server
-wss.on("connection", (ws) => {
-    console.log("Client connected");
+io.on('connection', async (socket) => {
+    console.log("User connected:", socket.id);
+    const id_sender = socket.handshake.query.id_sender;
+    console.log(id_sender)
+    console.log(socket.handshake.query.id_sender)
+    users[id_sender] = socket.id;
 
-    ws.on("message", (message) => {
-        const data = JSON.parse(message);
-        console.log("Received:", data);
+    // Menerima dan memproses pesan dari klien
+    socket.on('sendMessage', async (data) => {
+        const { api_key, id_sender, id_receiver, pesan, id_reference, attachment } = data;
+        const receiverSocketId = users[id_receiver];
 
-        if (data.type === "sendMessage") {
-            wss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify({ type: "newMessage", pesan: data.pesan }));
-                }
-            });
+        // Validasi API Key
+        const partner = await Partner.findOne({ where: { api_key } });
+        if (!partner) {
+            socket.emit('auth_error', 'Invalid API Key');
+            return;
+        }
+
+        // Simpan pesan ke database
+        const newMessage = await Chat.create({
+            partnerId: partner.id,
+            id_sender,
+            id_receiver,
+            pesan,
+            id_reference,
+            attachment,
+            edited: false
+        });
+
+        // Kirim pesan ke penerima
+        if(receiverSocketId) {
+            io.to(receiverSocketId).emit('newMessage', newMessage);
+        } else{
+            console.log("gaada brok")
         }
     });
 
-    ws.on("close", () => console.log("Client disconnected"));
+    // Menangani disconnect
+    socket.on('disconnect', () => {
+        console.log("User disconnected:", socket.id);
+        delete users[id_sender];
+    });
 });
 
 // Start Server

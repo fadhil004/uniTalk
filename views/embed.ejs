@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniTalk Chat</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* Seluruh layar */
         * {
             margin: 0;
             padding: 0;
@@ -15,7 +16,6 @@
             font-family: Arial, sans-serif;
         }
 
-        /* Container utama */
         .chat-container {
             width: 100vw;
             height: 100vh;
@@ -24,7 +24,6 @@
             background: #f8f9fa;
         }
 
-        /* Header */
         .chat-header {
             background: #007bff;
             color: white;
@@ -37,7 +36,6 @@
             align-items: center;
         }
 
-        /* Sidebar daftar chat */
         .chat-main {
             display: flex;
             flex: 1;
@@ -45,7 +43,7 @@
         }
 
         .chat-list {
-            width: 80px;
+            width: 90px;
             background: #343a40;
             padding: 10px;
             display: flex;
@@ -62,7 +60,6 @@
             font-size: 20px;
         }
 
-        /* Area pesan */
         .chat-box {
             flex: 1;
             padding: 15px;
@@ -92,20 +89,20 @@
             align-self: flex-start;
         }
 
-        /* Input */
         .chat-footer {
             display: flex;
             padding: 15px;
             border-top: 1px solid #ccc;
             background: white;
+            align-items: center;
+            gap: 10px;
         }
 
-        .chat-footer input {
+        .chat-footer input[type="text"] {
             flex: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            margin-right: 10px;
         }
 
         .chat-footer button {
@@ -115,6 +112,24 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+        }
+
+        /* Tombol upload */
+        .upload-button {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #007bff;
+        }
+
+        .upload-button:hover {
+            color: #0056b3;
+        }
+
+        /* Sembunyikan input file */
+        #attachmentInput {
+            display: none;
         }
 
     </style>
@@ -127,9 +142,7 @@
         </div>
 
         <div class="chat-main">
-            <div class="chat-list" id="chatList">
-                <!-- Sidebar daftar chat -->
-            </div>
+            <div class="chat-list" id="chatList"></div>
 
             <div class="chat-box" id="chatBox">
                 <p class="message other">Pilih chat untuk memulai obrolan</p>
@@ -137,59 +150,71 @@
         </div>
 
         <div class="chat-footer">
+            <input type="file" id="attachmentInput" style="display: none;">
+            <button id="attachButton"><i class="fa fa-paperclip"></i></button>
             <input type="text" id="messageInput" placeholder="Ketik pesan...">
             <button id="sendButton">Kirim</button>
-        </div>
+        </div>        
     </div>
 
     <script>
-        let socket;
-        let currentUserId = 1; // Gantilah dengan ID user yang sedang login
+        const api_key = '<%= api_key %>';
+        const id_sender = '<%= id_sender %>';
+        //test socket
+
+        const socket = io('http://localhost:5000', {
+            query: {
+                id_sender: id_sender,
+            }
+        }); 
         let selectedChatId = null;
-
-        function connectWebSocket() {
-            socket = new WebSocket("ws://localhost:5000");
-
-            socket.onopen = () => console.log("Terhubung ke WebSocket");
-
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === "newMessage" && data.id_receiver === selectedChatId) {
-                    addMessage(data.pesan, data.id_sender === currentUserId ? "user" : "other");
-                }
-            };
-
-            socket.onerror = (error) => console.error("WebSocket Error:", error);
-
-            socket.onclose = () => {
-                console.warn("WebSocket terputus, mencoba kembali dalam 5 detik...");
-                setTimeout(connectWebSocket, 5000);
-            };
-        }
-
-        connectWebSocket();
 
         function selectChat(chatId) {
             selectedChatId = chatId;
-            document.getElementById("chatBox").innerHTML = `<p class="message other">Memulai obrolan dengan ${chatId}</p>`;
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML = `<p class="message other">Memuat obrolan dengan ${chatId}...</p>`;
+
+            // Melakukan permintaan fetch untuk mendapatkan riwayat obrolan
+            fetch(`/api/chats/get-chat-history?api_key=${api_key}&id_sender=${id_sender}&id_receiver=${chatId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Riwayat obrolan berhasil diambil') {
+                        // Menghapus pesan pemuatan
+                        chatBox.innerHTML = '';
+
+                        // Menampilkan setiap pesan dalam urutan kronologis
+                        data.chats.forEach(chat => {
+                            const senderType = chat.id_sender === id_sender ? 'user' : 'other';
+                            addMessage(chat.pesan, senderType);
+                        });
+                    } else {
+                        chatBox.innerHTML = `<p class="message other">Gagal memuat obrolan dengan ${chatId}</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching chat history:', error);
+                    chatBox.innerHTML = `<p class="message other">Terjadi kesalahan saat memuat obrolan dengan ${chatId}</p>`;
+                });    
         }
 
-        document.getElementById("sendButton").addEventListener("click", () => {
-            const messageInput = document.getElementById("messageInput");
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
             const pesan = messageInput.value.trim();
 
             if (pesan && selectedChatId) {
-                socket.send(JSON.stringify({ 
-                    type: "sendMessage", 
-                    pesan,
-                    id_sender: currentUserId,
-                    id_receiver: selectedChatId
-                }));
+                socket.emit('sendMessage', {
+                    api_key,
+                    id_sender,
+                    id_receiver: selectedChatId,
+                    pesan
+                });
 
-                addMessage(pesan, "user");
-                messageInput.value = "";
+                addMessage(pesan, 'user');
+                messageInput.value = '';
             }
-        });
+        }
+
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
 
         function addMessage(pesan, sender) {
             const chatBox = document.getElementById("chatBox");
@@ -200,21 +225,68 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function generateChatList() {
-            const chatList = document.getElementById("chatList");
-            chatList.innerHTML = "";
-            const users = [{ id: 2, name: "Zaki" }, { id: 3, name: "Alya" }];
-            
-            users.forEach(user => {
-                const button = document.createElement("button");
-                button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${user.name}</span></i>`;
-                button.onclick = () => selectChat(user.id);
-                chatList.appendChild(button);
-            });
-        }
+        // Menerima pesan baru
+        socket.on('newMessage', (data) => {
+            console.log("hit api newMessage1")
+            console.log("data.id_sender: ",data.id_sender)
+            console.log("data.id_receiver: ",data.id_receiver)
+            console.log("id_sender: ", id_sender)
+            console.log("id_receiver: ", selectedChatId)
+            if (data.id_sender === selectedChatId || data.id_receiver === selectedChatId) {
+                const senderType = data.id_sender === id_sender ? 'user' : 'other';
+                console.log("hit api newMessage2")
+                addMessage(data.pesan, senderType);
+            }
+        });
 
-        generateChatList();
+
+        fetch(`/api/chats/get-chats?api_key=${api_key}&id_sender=${id_sender}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("hit api")
+                const chatList = document.getElementById("chatList");
+                chatList.innerHTML = "";
+
+                const addedReceivers = new Set();
+                data.chats.forEach(chat => {
+                    if (chat.id_receiver === id_sender || addedReceivers.has(chat.id_receiver)) {
+                        return;
+                    }
+                    addedReceivers.add(chat.id_receiver);
+
+                    const button = document.createElement("button");
+                    button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${chat.id_receiver} </span></i>`;
+                    button.onclick = () => selectChat(chat.id_receiver);
+                    chatList.appendChild(button);
+                });    
+            })
+
+        // Handle upload file
+        document.getElementById("attachButton").addEventListener("click", () => {
+            document.getElementById("attachmentInput").click();
+        });
+
+        document.getElementById("attachmentInput").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+
+            if (file && selectedChatId) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const fileData = reader.result;
+                    socket.send(JSON.stringify({ 
+                        type: "sendFile", 
+                        fileName: file.name,
+                        fileData,
+                        id_sender: currentUserId,
+                        id_receiver: selectedChatId
+                    }));
+
+                    addMessage(`📎 ${file.name}`, "user");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -1,21 +1,26 @@
 const { Op } = require('sequelize') 
-const { Chat, sequelize } = require('../models');
+const { Chat, sequelize, Partner } = require('../models');
 const { Sequelize} = sequelize;
 
 class chatController{
     static async sendMessage(req, res) {
         try {
             const { partnerId, id_sender, id_receiver, id_reference, pesan } = req.body;
-            const attachment = req.uploadedFileName ? `/database/attachments/${req.uploadedFileName}` : null;
+            const attachment = req.file ? `/database/attachments/${req.uploadedFileName}` : null;
 
+            const partner = await Partner.findOne({where: { id: partnerId } });
+            if (!partner) return res.status(403).json({ message: 'Invalid API Key!' });
+
+            if (!id_sender) return res.status(400).json({ message: 'ID Sender is required!' })
+                
             if (!pesan && !attachment) {
                 return res.status(400).json({ message: 'Message or attachment is required!' });
             }
-
+            console.log("hit api")
             const chat = await Chat.create({
                 partnerId,
                 id_sender,
-                id_receiver,
+                id_receiver,    
                 id_reference,
                 pesan,
                 attachment,
@@ -170,6 +175,7 @@ class chatController{
             return res.status(500).json({ message: "Internal Server Error" });
         }
     }
+    
     
     
 }
