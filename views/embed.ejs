@@ -220,7 +220,7 @@
             <div class="chat-list" id="chatList"></div>
 
             <div class="chat-box" id="chatBox">
-                <p class="message other">Pilih chat untuk memulai obrolan</p>
+                <p class="message other">Choose chat to start chatting</p>
             </div>
         </div>
 
@@ -229,8 +229,8 @@
                 <button type="button" id="addChatButton" class="add-chat-button"><i class="fa fa-plus"></i></button>
                 <input type="file" id="attachmentInput" name="attachment" style="display: none;">
                 <button type="button" id="attachButton"><i class="fa fa-paperclip"></i></button>
-                <input type="text" id="messageInput" placeholder="Ketik pesan...">
-                <button type="submit" id="sendButton">Kirim</button>
+                <input type="text" id="messageInput" placeholder="Write Message...">
+                <button type="submit" id="sendButton">Send</button>
             </div>
         </form>
     </div>
@@ -238,13 +238,13 @@
     <div class="popup-form" id="popupForm">
         <div class="popup-content">
             <span class="close-button" id="closePopupButton">&times;</span>
-            <h2>Buat Chat Baru</h2>
+            <h2>New Message</h2>
             <form id="newChatForm">
                 <label for="receiverId">ID Receiver:</label>
                 <input type="text" id="receiverId" name="receiverId">
                 <label for="groupId">ID Group:</label>
                 <input type="text" id="groupId" name="groupId">
-                <button type="submit">Simpan</button>
+                <button type="submit">Save</button>
             </form>
         </div>
     </div>
@@ -435,7 +435,7 @@
                 .catch(error => {
                     console.error('Error uploading file:', error);
                 });
-                messageInput.placeholder = 'Ketik pesan...';
+                messageInput.placeholder = 'Write Message...';
                 messageInput.disabled = false;
             }
 

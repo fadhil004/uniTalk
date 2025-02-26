@@ -1,0 +1,90 @@
+
+
+  
+    <style>
+      .alert {
+          position: fixed;
+          top: -50px;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 15px;
+          border-radius: 5px;
+          box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+          font-size: 16px;
+          transition: top 0.5s ease-in-out;
+          z-index: 10000;
+      }
+  
+      .alert.success {
+          background-color: #4CAF50; /* Warna hijau */
+          color: white;
+      }
+  
+      .alert.error {
+          background-color: #f44336; /* Warna merah */
+          color: white;
+      }
+  
+      .alert.show {
+          top: 20px;
+      }
+    </style>
+  
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          let alertBox = document.getElementById("alertBox");
+          if (alertBox) {
+              setTimeout(() => {
+                  alertBox.classList.add("show");
+                  setTimeout(() => {
+                      alertBox.classList.remove("show");
+                  }, 3000); // Sembunyikan setelah 3 detik
+              }, 500);
+          }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  
+    <div class="content-wrapper">
+      <div class="page-header">
+        <h3 class="page-title">
+          <span class="page-title-icon bg-gradient-primary text-white me-2">
+            <i class="fa fa-question"></i>
+          </span> Help Center
+        </h3>
+      </div>
+      <div class="row">
+        <div class="col-md-12 col-sm-12 stretch-card grid-margin">
+          <div class="card bg-white card-img-holder text-white">
+            <div class="card-body">
+                <h1 class="mb-4 text-center text-black">FAQ (Frequently Asked Questions)</h1>
+              <h4 class="text-black">1. How do I register as a partner?
+              </h4>
+              <p class="text-black">
+                    Go to the "Partner" menu and complete the registration form. Wait for the admin to approve your application.
+            </p>
+            <h4 class="text-black">2. How do I send messages?</h4>
+            <p class="text-black">
+                Once your partner application is approved, the chat feature will be activated. Go to the "Chat" menu and start implement UniTalk Chat.
+            </p>
+            <h4 class="text-black">3. How long does the partner registration approval take?</h4>
+            <p class="text-black">
+                The approval process may vary, but it usually takes 1-3 business days.
+            </p>
+            <h4 class="text-black">4. Can I edit my profile information after registering?</h4>
+            <p class="text-black">
+                Yes, you can edit your profile through the "Partner" menu in the dashboard.
+            </p>
+            <h4 class="text-black">5. What if my registration is rejected?</h4>
+            <p class="text-black">
+                If your registration is rejected, you will notification. You can correct the necessary details and reapply.
+            </p>
+            <p class="text-black">
+                Contact Admin
+If you have any questions or technical issues, please contact the admin via email: <a href="#">admin@unitalk.com</a>
+            </p>
+            </div>
+          </div>
+        </div>  
+      </div>
