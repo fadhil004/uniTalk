@@ -43,7 +43,7 @@
                   
                   <div class="d-flex justify-content-center">
                     <% if(user.status === 'accepted') { %>
-                      <button type="submit" class="btn btn-gradient-primary ">Implement Chat</button>
+                      <button type="button" class="btn btn-gradient-primary " data-bs-toggle="modal" data-bs-target="#implementationModal">Implement Chat</button>
                       <% } else if(user.status === 'rejected') { %>
                         <button type="submit" href="/" class="btn btn-gradient-primary ">Back To Dashboard</button>
                       <% } %>
@@ -54,3 +54,142 @@
           </div>
       </div>
 </div>
+
+<style>
+        .code-container {
+            position: relative;
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: auto;
+            border: 1px solid #ccc;
+        }
+        .code-container code {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #50fa7b;
+            color: #282a36;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+</style>
+
+<!-- Modal -->
+<div class="modal fade" id="implementationModal" tabindex="-1" aria-labelledby="implementationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-2">
+      <div class="modal-header">
+        <h2 class="modal-title" id="implementationModalLabel">How To Implement UniTalk Chat</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Follow these steps below to integrate UniTalk Chat into your website:</p>
+        <p><strong>Step 1:</strong> Add the following code within your <code>&lt;head&gt;</code> tag:</p>
+        <div class="code-container mb-3">
+          <code id="headCode">
+            &lt;!-- UniTalk Chat Styles and Scripts --&gt;
+            &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"&gt;
+            &lt;script src="https://path-to-your-script.js"&gt;&lt;/script&gt;
+            &lt;style&gt;
+              #uniTalkChat {
+                  position: fixed;
+                  bottom: 90px;
+                  right: 20px;
+                  width: 450px;
+                  height: 550px;
+                  border: none;
+                  border-radius: 10px;
+                  z-index: 9999;
+                  display: none;
+                  box-shadow: 0px 4px 6px rgba(0,0,0,0.2);
+              }
+              #uniTalkChat.show {
+                  display: block;
+              }
+              #chatButton {
+                  position: fixed;
+                  bottom: 20px;
+                  right: 20px;
+                  width: 60px;
+                  height: 60px;
+                  background: #007bff;
+                  color: white;
+                  border: none;
+                  border-radius: 50%;
+                  font-size: 24px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  cursor: pointer;
+                  box-shadow: 0px 4px 6px rgba(0,0,0,0.2);
+                  z-index: 10000;
+                  transition: transform 0.3s ease;
+              }
+              #chatButton:active {
+                  transform: scale(0.9);
+              }
+          &lt;/style&gt;
+          &lt;script&gt;
+              document.addEventListener("DOMContentLoaded", function () {
+                  const chatButton = document.getElementById("chatButton");
+                  const iframeChat = document.getElementById("uniTalkChat");
+          
+                  chatButton.addEventListener("click", function () {
+                      // Toggle iframe chat
+                      if (iframeChat.classList.contains("show")) {
+                          iframeChat.classList.remove("show");
+                      } else {
+                          iframeChat.classList.add("show");
+                      }
+                  });
+              });
+          &lt;/script&gt;
+        
+        </code>
+          <button class="btn btn-sm copy-button" onclick="copyToClipboard('#headCode')">Copy</button>
+        </div>
+        <p><strong>Step 2:</strong> Before the closing <code>&lt;/body&gt;</code> tag, insert the following code:</p>
+        <div class="code-container mb-3">
+          <code id="bodyCode">&lt;!-- UniTalk Chat --&gt;
+&lt;button id="chatButton"&gt;&lt;i class="fa-solid fa-comments"&gt;&lt;/i&gt;&lt;/button&gt;
+&lt;iframe 
+    id="uniTalkChat"
+    src="http://localhost:5000/api/chats/embed?api_key=your_api_key&amp;id_sender=your_user_id"&gt; 
+&lt;/iframe&gt;</code>
+          <button class="btn btn-sm copy-button" onclick="copyToClipboard('#bodyCode')">Copy</button>
+        </div>
+        <p><strong>Step 3:</strong> Make sure to change <code>your_api_key</code> with your API key and <code>your_user_id</code> with User ID that is currently logged in.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyToClipboard(elementId) {
+    var codeElement = document.querySelector(elementId);
+    var range = document.createRange();
+    range.selectNode(codeElement);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    try {
+      var successful = document.execCommand('copy');
+      var msg = successful ? 'Code copied to clipboard!' : 'Failed to copy code';
+      alert(msg);
+    } catch (err) {
+      alert('Oops, something wrong with copy the code!');
+    }
+    window.getSelection().removeAllRanges();
+  }
+</script>
