@@ -5,7 +5,7 @@ module.exports = {
     await queryInterface.createTable('Chats', {
       id: {
         allowNull: false,
-        autoIncrement: fale,
+        autoIncrement: false,
         primaryKey: true,
         type: Sequelize.UUID
       },
@@ -35,7 +35,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       edited: {
-        type: DataTypes.BOOLEAN,
+        type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false
       },
