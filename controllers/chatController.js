@@ -113,6 +113,13 @@ class chatController{
     }
     static async getChatStatistics(req, res) {
         try {
+            // Ambil `partnerId` dari `req.partner` (hasil authentication API Key)
+            const partnerId = req.partner ? req.partner.id : null;
+            
+            if (!partnerId) {
+                return res.status(403).json({ message: "🚫 Access denied: Invalid API Key!" });
+            }
+    
             const year = req.query.year || new Date().getFullYear();
     
             let chatStats = Array.from({ length: 12 }, (_, i) => ({
@@ -121,13 +128,14 @@ class chatController{
                 totalGroupChat: 0,
             }));
     
-            // Ambil data private chat
+            // Ambil data private chat (hanya dari partner terkait)
             const privateChats = await Chat.findAll({
                 attributes: [
                     [Sequelize.fn("DATE_PART", "month", Sequelize.col("createdAt")), "month"],
                     [Sequelize.fn("COUNT", Sequelize.col("id")), "totalPrivateChat"],
                 ],
                 where: {
+                    partnerId, // Hanya chat dari partner terkait
                     id_receiver: { [Sequelize.Op.ne]: null },
                     id_reference: null,
                     createdAt: { 
@@ -141,13 +149,14 @@ class chatController{
                 raw: true,
             });
     
-            // Ambil data group chat
+            // Ambil data group chat (hanya dari partner terkait)
             const groupChats = await Chat.findAll({
                 attributes: [
                     [Sequelize.fn("DATE_PART", "month", Sequelize.col("createdAt")), "month"],
                     [Sequelize.fn("COUNT", Sequelize.col("id")), "totalGroupChat"],
                 ],
                 where: {
+                    partnerId, // Hanya chat dari partner terkait
                     id_reference: { [Sequelize.Op.ne]: null },
                     createdAt: { 
                         [Sequelize.Op.between]: [
@@ -171,10 +180,11 @@ class chatController{
     
             return res.json(chatStats);
         } catch (error) {
-            console.error("Error fetching chat statistics:", error);
+            console.error("❌ Error fetching chat statistics:", error);
             return res.status(500).json({ message: "Internal Server Error" });
         }
     }
+    
     
     
     

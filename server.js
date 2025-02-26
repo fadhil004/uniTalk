@@ -75,14 +75,17 @@ const users = {};
 io.on('connection', async (socket) => {
     console.log("User connected:", socket.id);
     const id_sender = socket.handshake.query.id_sender;
-    console.log(id_sender)
-    console.log(socket.handshake.query.id_sender)
+    console.log("Id Sender:", id_sender)
     users[id_sender] = socket.id;
+
+    socket.on('joinGroup', (groupId) => {
+        socket.join(groupId);
+        console.log(`User ${socket.id} joined group ${groupId}`);
+    });
 
     // Menerima dan memproses pesan dari klien
     socket.on('sendMessage', async (data) => {
         const { api_key, id_sender, id_receiver, pesan, id_reference } = data;
-        const receiverSocketId = users[id_receiver];
 
         // Validasi API Key
         const partner = await Partner.findOne({ where: { api_key } });
@@ -96,23 +99,28 @@ io.on('connection', async (socket) => {
             partnerId: partner.id,
             id_sender,
             id_receiver,
-            pesan,
             id_reference,
+            pesan,
             edited: false
         });
 
-        // Kirim pesan ke penerima
-        if(receiverSocketId) {
-            io.to(receiverSocketId).emit('newMessage', newMessage);
-        } else{
-            console.log("gaada brok")
+        if (id_reference) {
+            // Emit pesan ke semua anggota grup
+            io.to(id_reference).emit('newMessage', newMessage);
+        } else {
+            // Emit pesan ke penerima individu
+            const receiverSocketId = users[id_receiver];
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('newMessage', newMessage);
+            }
         }
     });
+    
 
     //upload attachments
     app.post('/upload', uploadSingle('attachment'), async (req,res) =>{
         try {    
-            const { api_key, id_sender, id_receiver } = req.body;
+            const { api_key, id_sender, id_receiver, id_reference } = req.body;
             if(!req.file) {
                 return res.status(400).send('No file uploaded!');
             }
@@ -128,16 +136,21 @@ io.on('connection', async (socket) => {
                 partnerId: partner.id,
                 id_sender,
                 id_receiver,
+                id_reference,
                 attachment: req.file.filename,
                 edited: false
             });
-            const receiverSocketId = users[id_receiver];
-            if(receiverSocketId) {
-                io.to(receiverSocketId).emit('newAttachment', newAttachment);
-            } else{
-                console.log("gaada brok")
+            if (id_reference) {
+                // Emit pesan ke semua anggota grup
+                io.to(id_reference).emit('newAttachment', newAttachment);
+            } else {
+                // Emit pesan ke penerima individu
+                const receiverSocketId = users[id_receiver];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit('newAttachment', newAttachment);
+                }
             }
-            res.status(200).json({ message: 'File uploaded succsefully', data: newAttachment });
+            res.status(200).json({ message: 'File uploaded successfully', data: newAttachment });
         } catch (error) {
             res.status(400).json({message: 'error uploading file!', error: error.message});
         }

@@ -42,6 +42,7 @@ const authentication = async (req, res, next) => {
             logo_partner: user.partner && user.partner.logo_partner ? user.partner.logo_partner : null,
             partnerName: user.partner ? user.partner.nama_partner : 'Register as partner first!',
             status: user.partner && user.partner.status ? user.partner.status : null,
+            api_key: user.partner && user.partner.api_key ? user.partner.api_key : null,
             joining_date: joiningDateFormatted
         };
 

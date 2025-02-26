@@ -33,14 +33,19 @@
                     <label type="text" class="form-control bg-gradient-warning"> <h3 class="text-center text-white">Pending</h3> </label>                       
                     <% } %>
                   </div>
+
+                  <% if(user.status === 'accepted') { %>
+                  <div class="form-group ">
+                    <h2 class="mb-3">API Key</h2>
+                    <label type="text" class="form-control bg-gradient-primary"> <h3 class="text-center text-white"><%= user.api_key %></h3> </label>
+                  </div>
+                  <% } %>
                   
                   <div class="d-flex justify-content-center">
                     <% if(user.status === 'accepted') { %>
                       <button type="submit" class="btn btn-gradient-primary ">Implement Chat</button>
                       <% } else if(user.status === 'rejected') { %>
                         <button type="submit" href="/" class="btn btn-gradient-primary ">Back To Dashboard</button>
-                      <% } else { %>
-                        <a href="/" class="btn btn-gradient-primary ">Back To Dashboard</a>
                       <% } %>
                   </div>
                 </form>

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { Chat, Partner} = require('../models');
+const { Chat, Partner, sequelize} = require('../models');
 const upload = require('../helpers/uploadAttachments');
 const chatController = require('../controllers/chatController');
 
@@ -93,6 +93,32 @@ router.get('/get-chat-history', async (req, res) => {
         res.status(500).json({ message: 'Terjadi kesalahan saat mengambil riwayat obrolan', error: error.message });
     }
 });
+
+router.get('/get-group-chat-history', async (req, res) => {
+    try {
+        const { api_key, id_reference } = req.query;
+
+        if (!api_key || !id_reference) {
+            return res.status(403).json({ message: 'API Key dan ID Grup diperlukan' });
+        }
+
+        const partner = await Partner.findOne({ where: { api_key } });
+        if (!partner) return res.status(403).json({ message: 'API Key tidak valid' });
+
+        // Ambil semua pesan dalam grup tertentu
+        const chats = await Chat.findAll({
+            where: {
+                partnerId: partner.id,
+                id_reference: id_reference
+            },
+            order: [['createdAt', 'ASC']]
+        });
+        res.status(200).json({ message: 'Riwayat obrolan berhasil diambil', chats });
+    } catch (error) {
+        res.status(500).json({ message: 'Terjadi kesalahan saat mengambil riwayat obrolan grup', error: error.message });
+    }
+});
+
 
 
 module.exports = router

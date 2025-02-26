@@ -90,6 +90,16 @@
             word-wrap: break-word;
         }
 
+        .icon.user {
+            color: black;
+            align-self: flex-end;
+        }
+
+        .icon.other {
+            color: black;
+            align-self: flex-start;
+        }
+
         .message.user {
             background: #007bff;
             color: white;
@@ -250,14 +260,27 @@
             }
         }); 
         let selectedChatId = null;
+        let selectedChatIsGroup = null;
+        let senderName = '';
+        let isGroup = false;
 
-        function selectChat(chatId) {
+        function selectChat(chatId, isGroup = false) {
             selectedChatId = chatId;
+            selectedChatIsGroup = isGroup
             const chatBox = document.getElementById("chatBox");
             chatBox.innerHTML = `<p class="message other">Memuat obrolan dengan ${chatId}...</p>`;
 
+            if (isGroup){
+                socket.emit('joinGroup', chatId);
+            }
+
+            const endpoint = isGroup
+            ? `/api/chats/get-group-chat-history?api_key=${api_key}&id_reference=${chatId}`
+            : `/api/chats/get-chat-history?api_key=${api_key}&id_sender=${id_sender}&id_receiver=${chatId}`;
+
+
             // Melakukan permintaan fetch untuk mendapatkan riwayat obrolan
-            fetch(`/api/chats/get-chat-history?api_key=${api_key}&id_sender=${id_sender}&id_receiver=${chatId}`)
+            fetch(endpoint)
                 .then(response => response.json())
                 .then(data => {
                     if (data.message === 'Riwayat obrolan berhasil diambil') {
@@ -268,14 +291,13 @@
                         data.chats.forEach(chat => {
                             const senderType = chat.id_sender === id_sender ? 'user' : 'other';
                             if (chat.pesan !== null) {
-                                addMessage(chat.pesan, senderType);
+                                addMessage(chat.pesan, senderType, isGroup, chat.id_sender);
                             } else if (chat.attachment) {
                                 const linkElement = document.createElement('img');
                                 linkElement.src = `/database/attachments/${chat.attachment}`;
                                 linkElement.target = '_blank';
                                 linkElement.style = 'max-width:150px;max-height:150px;color:black; text-decoration:none;'
-
-                                addMessage(linkElement, senderType);
+                                addMessage(linkElement, senderType, isGroup, chat.id_sender);
                             }
                         });
                     } else {
@@ -288,10 +310,25 @@
                 });    
         }
 
-        function addMessage(pesan, sender) {
+        function joinGroup(groupId) {
+            socket.emit('joinGroup', groupId);
+        }
+
+        function addMessage(pesan, sender, isGroup = false, senderName) {
             const chatBox = document.getElementById("chatBox");
             const messageElement = document.createElement("p");
             messageElement.classList.add("message", sender);
+            const name = senderName
+
+            if (isGroup) {
+                const userIcon = document.createElement("i");
+                userIcon.classList.add("fa-solid","fa-user", "icon", sender, "pe-2", "ps-2")
+                const userId = document.createElement("span");
+                userId.classList.add("ps-2");
+                userId.textContent = name;
+                userIcon.appendChild(userId);
+                chatBox.appendChild(userIcon)
+            }
 
             if (typeof pesan === 'string') {
                 messageElement.textContent = pesan;
@@ -305,14 +342,9 @@
         // Menerima pesan baru
         socket.on('newMessage', (data) => {
             console.log("hit api newMessage1")
-            console.log("data.id_sender: ",data.id_sender)
-            console.log("data.id_receiver: ",data.id_receiver)
-            console.log("id_sender: ", id_sender)
-            console.log("id_receiver: ", selectedChatId)
-            if (data.id_sender === selectedChatId || data.id_receiver === selectedChatId) {
-                const senderType = data.id_sender === id_sender ? 'user' : 'other';
-                console.log("hit api newMessage2")
-                addMessage(data.pesan, senderType);
+            if (data.id_sender !== id_sender) {
+                const senderType = 'other';
+                addMessage(data.pesan, senderType, selectedChatIsGroup, data.id_sender);
             }
         });
 
@@ -320,23 +352,44 @@
         fetch(`/api/chats/get-chats?api_key=${api_key}&id_sender=${id_sender}`)
             .then(response => response.json())
             .then(data => {
-                console.log("hit api")
+                console.log("hit api get chats");
                 const chatList = document.getElementById("chatList");
                 chatList.innerHTML = "";
 
-                const addedUsers = new Set();
+                // Menggunakan Map untuk melacak chatId dan tipe obrolan
+                const chatMap = new Map();
+
                 data.chats.forEach(chat => {
-                    const otherUserId = chat.id_sender === id_sender ? chat.id_receiver : chat.id_sender;
-                    if (!addedUsers.has(otherUserId)) {
-                        addedUsers.add(otherUserId);
+                    let chatId;
+                    let isGroup = false;
+
+                    if (chat.id_reference && !chat.id_receiver) {
+                        // Ini adalah pesan grup
+                        chatId = chat.id_reference;
+                        isGroup = true;
+                    } else {
+                        // Ini adalah pesan pribadi
+                        chatId = chat.id_sender === id_sender ? chat.id_receiver : chat.id_sender;
+                    }
+
+                    // Membuat kunci unik berdasarkan chatId dan tipe obrolan
+                    const chatKey = `${chatId}-${isGroup ? 'group' : 'private'}`;
+
+                    if (!chatMap.has(chatKey)) {
+                        chatMap.set(chatKey, { chatId, isGroup });
 
                         const button = document.createElement("button");
-                        button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${otherUserId}</span></i>`;
-                        button.onclick = () => selectChat(otherUserId);
+                        button.innerHTML = isGroup
+                            ? `<i class="fa-solid fa-users"><span class="ps-2">${chatId}</span></i>`
+                            : `<i class="fa-solid fa-user"><span class="ps-2">${chatId}</span></i>`;
+                        button.onclick = () => selectChat(chatId, isGroup);
                         chatList.appendChild(button);
                     }
-                });    
+                });
             })
+            .catch(error => {
+                console.error('Error fetching chat list:', error);
+            });
 
         // Handle upload file
         document.getElementById("attachButton").addEventListener("click", () => {
@@ -357,7 +410,8 @@
                 formData.append('attachment', file);
                 formData.append('api_key', api_key);
                 formData.append('id_sender', id_sender);
-                formData.append('id_receiver', selectedChatId);
+                formData.append('id_receiver', selectedChatIsGroup ? '' : selectedChatId);
+                formData.append('id_reference', selectedChatIsGroup ? selectedChatId : '');
 
                 fetch('/upload', {
                     method: 'POST',
@@ -372,14 +426,9 @@
                     linkElement.target = '_blank';
                     linkElement.style = 'max-width:150px;max-height:150px;color:black'
                     linkElement.textContent = '📎 ',data.data.attachment;
-                    addMessage(linkElement, 'user');
-                } else {
-                    const linkElement = document.createElement('img');
-                    linkElement.src = `/database/attachments/${data.data.attachment}`;
-                    linkElement.target = '_blank';
-                    linkElement.style = 'max-width:150px;max-height:150px;color:black'
-                    linkElement.textContent = '📎 ' + data.data.attachment;
-                    addMessage(linkElement, 'user');
+                    addMessage(linkElement, 'user', selectedChatIsGroup, id_sender);
+                } else {        
+                    console.log("ga kesimpan")            
                     console.error('Error uploading file:', data.error);
                 }
                 })
@@ -395,11 +444,12 @@
                 socket.emit('sendMessage', {
                     api_key,
                     id_sender,
-                    id_receiver: selectedChatId,
+                    id_receiver: selectedChatIsGroup ? null : selectedChatId,
+                    id_reference: selectedChatIsGroup ? selectedChatId : null,
                     pesan
                 });
 
-                addMessage(pesan, 'user');
+                addMessage(pesan, 'user', selectedChatIsGroup, id_sender);
                 messageInput.value = '';
             }
 
@@ -408,15 +458,15 @@
         });
 
         socket.on('newAttachment', (data) => {
-            if (data.id_sender === selectedChatId || data.id_receiver === selectedChatId) {
-                const senderType = data.id_sender === id_sender ? 'user' : 'other';
+            if (data.id_sender !== id_sender) {
+                const senderType = 'other';
                 console.log("hit api newAttachment2")
                 const linkElement = document.createElement('img');
                     linkElement.src = `/database/attachments/${data.attachment}`;
                     linkElement.target = '_blank';
                     linkElement.style = 'max-width:150px;max-height:150px;color:black'
                     linkElement.textContent = '📎 '+ data.attachment;
-                    addMessage(linkElement, 'other');
+                    addMessage(linkElement, 'other', selectedChatIsGroup, id_sender);
             }
         });
 
@@ -468,8 +518,14 @@
 
                 // Tambahkan tombol chat baru ke daftar chat
                 const button = document.createElement('button');
-                button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${chatId}</span></i>`;
-                button.onclick = () => selectChat(chatId);
+                if (receiverId){
+                    button.innerHTML = `<i class="fa-solid fa-user"><span class="ps-2">${chatId}</span></i>`;
+                    button.onclick = () => selectChat(chatId);
+                } else if(groupId){
+                    isGroup = true;
+                    button.innerHTML = `<i class="fa-solid fa-users"><span class="ps-2">${chatId}</span></i>`;
+                    button.onclick = () => selectChat(chatId, isGroup);
+                }
                 chatList.appendChild(button);
 
                 // Reset form dan tutup pop-up
